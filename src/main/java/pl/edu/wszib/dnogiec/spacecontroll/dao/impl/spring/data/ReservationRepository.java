@@ -17,7 +17,7 @@ import java.util.List;
  - rezerwacji w określonym przedziale czasowym. */
 
 @Repository
-public interface ReservationDAO extends JpaRepository<Reservation, Long> {
+public interface ReservationRepository extends JpaRepository<Reservation, Long> {
     List<Reservation> findByConferenceRoomId(Long conferenceRoomId);
     List<Reservation> findByUserId(Long userId);
     List<Reservation> findByStatus(Reservation.ReservationStatus status);

@@ -11,6 +11,6 @@ import java.util.Optional;
  Implementuje podstawowe operacje CRUD oraz metodę wyszukującą użytkownika po loginie. */
 
 @Repository
-public interface UserDAO extends JpaRepository<User, Long> {
+public interface UserRepository extends JpaRepository<User, Long> {
 Optional<User> findByLogin(String login);
 }

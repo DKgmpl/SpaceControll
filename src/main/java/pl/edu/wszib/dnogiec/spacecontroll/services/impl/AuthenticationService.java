@@ -4,7 +4,7 @@ import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
-import pl.edu.wszib.dnogiec.spacecontroll.dao.impl.spring.data.UserDAO;
+import pl.edu.wszib.dnogiec.spacecontroll.dao.impl.spring.data.UserRepository;
 import pl.edu.wszib.dnogiec.spacecontroll.model.User;
 import pl.edu.wszib.dnogiec.spacecontroll.services.IAuthenticationService;
 import pl.edu.wszib.dnogiec.spacecontroll.session.SessionConstants;
@@ -15,12 +15,12 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class AuthenticationService implements IAuthenticationService {
 
-    private final UserDAO userDAO;
+    private final UserRepository userRepository;
     private final HttpSession httpSession;
 
     @Override
     public void login(String login, String password) {
-        Optional<User> user = this.userDAO.findByLogin(login);
+        Optional<User> user = this.userRepository.findByLogin(login);
         if (user.isPresent() &&
                 DigestUtils.md5DigestAsHex(password.getBytes()).equals(user.get().getPassword())) {
             httpSession.setAttribute(SessionConstants.USER_KEY, user.get());
@@ -34,8 +34,8 @@ public class AuthenticationService implements IAuthenticationService {
     }
 
     @Override
-    public void register(String login, String password) {
-        Optional<User> existingUser = this.userDAO.findByLogin(login);
+    public void register(String email, String login, String password, String name, String surname) {
+        Optional<User> existingUser = this.userRepository.findByLogin(login);
         if (existingUser.isPresent()) {
             this.httpSession.setAttribute("registerInfo", "Użytkownik o podanym loginie już istnieje");
             System.out.println("Błąd rejestracji nowego użytkownika - Użytkownik o podanym loginie już istnieje");
@@ -44,9 +44,12 @@ public class AuthenticationService implements IAuthenticationService {
         User newUser = new User();
         newUser.setLogin(login);
         newUser.setPassword(DigestUtils.md5DigestAsHex(password.getBytes()));
+        newUser.setEmail(email);
+        newUser.setName(name);
+        newUser.setSurname(surname);
         newUser.setRole(User.Role.USER);
-        this.userDAO.save(newUser);
-        this.httpSession.setAttribute("registerinfo","Rejestracja zakończona pomyślnie");
+        this.userRepository.save(newUser);
+        this.httpSession.setAttribute("registerinfo", "Rejestracja zakończona pomyślnie");
         System.out.println("Zarejestrowano nowego użytkownika");
     }
 
@@ -54,6 +57,12 @@ public class AuthenticationService implements IAuthenticationService {
     public void logout() {
         this.httpSession.removeAttribute(SessionConstants.USER_KEY);
         System.out.println("Wylogowano");
+    }
+
+    @Override
+    public void showAllData() {
+        Iterable<User> allUsers = this.userRepository.findAll();
+        allUsers.forEach(System.out::println);
     }
 
     @Override

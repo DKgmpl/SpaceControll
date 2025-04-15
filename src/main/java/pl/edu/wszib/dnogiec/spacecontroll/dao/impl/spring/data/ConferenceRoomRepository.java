@@ -9,6 +9,6 @@ import pl.edu.wszib.dnogiec.spacecontroll.model.ConferenceRoom;
  Umożliwia m.in. wyszukiwanie sali konferencyjnej po nazwie. */
 
 @Repository
-public interface ConferenceRoomDAO extends JpaRepository<ConferenceRoom, Long> {
+public interface ConferenceRoomRepository extends JpaRepository<ConferenceRoom, Long> {
     ConferenceRoom findByName(String name);
 }
