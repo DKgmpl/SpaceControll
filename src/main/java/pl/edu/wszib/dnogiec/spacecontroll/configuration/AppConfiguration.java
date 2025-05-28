@@ -15,7 +15,7 @@ public class AppConfiguration {
         FilterRegistrationBean<AdminFilter> registrationBean = new FilterRegistrationBean<>();
 
         registrationBean.setFilter(new AdminFilter());
-        registrationBean.addUrlPatterns("/*");  
+        registrationBean.addUrlPatterns("/*");
         registrationBean.setOrder(1);
 
         return registrationBean;
