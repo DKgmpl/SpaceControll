@@ -52,10 +52,10 @@ public class AuthenticationController {
         }
         try {
             this.authenticationService.register(registrationForm.getEmail(),
-                                                registrationForm.getLogin(),
-                                                registrationForm.getPassword(),
-                                                registrationForm.getName(),
-                                                registrationForm.getSurname());
+                    registrationForm.getLogin(),
+                    registrationForm.getPassword(),
+                    registrationForm.getName(),
+                    registrationForm.getSurname());
             this.authenticationService.showAllData();
             model.addAttribute("registerInfo", "Rejestracja zakończona pomyślnie");
             model.addAttribute("registrationSuccesful", true);
