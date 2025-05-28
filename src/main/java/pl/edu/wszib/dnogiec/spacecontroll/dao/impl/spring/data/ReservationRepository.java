@@ -7,20 +7,15 @@ import pl.edu.wszib.dnogiec.spacecontroll.model.Reservation;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/**
- Repozytorium do operacji na encji Reservation.
- Umożliwia wyszukiwanie rezerwacji na podstawie różnych kryteriów:
-
- - identyfikatora sali konferencyjnej,
- - identyfikatora użytkownika,
- - statusu rezerwacji,
- - rezerwacji w określonym przedziale czasowym. */
-
 @Repository
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
-    List<Reservation> findByConferenceRoomId(Long conferenceRoomId);
+    List<Reservation> findByConferenceRoomId(Long roomId);
+
+    List<Reservation> findByConferenceRoomIdAndStatus(Long roomId, Reservation.ReservationStatus status);
+
     List<Reservation> findByUserId(Long userId);
+
     List<Reservation> findByStatus(Reservation.ReservationStatus status);
-    List<Reservation> findByConferenceRoomIdAndStartTimeBetween(
-            Long conferenceRoomId, LocalDateTime start, LocalDateTime end);
+
+    List<Reservation> findByConferenceRoomIdAndStartTimeBetween(Long conferenceRoomId, LocalDateTime start, LocalDateTime end);
 }

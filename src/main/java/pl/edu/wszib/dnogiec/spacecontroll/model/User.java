@@ -5,20 +5,22 @@ import lombok.*;
 
 @Entity
 @Table(name = "app_user")
-@NoArgsConstructor
-@AllArgsConstructor
 @Getter
 @Setter
 @ToString
+@NoArgsConstructor
+@AllArgsConstructor
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String name;
     private String surname;
     private String login;
     private String password;
     private String email;
+
     @Enumerated(EnumType.STRING)
     private Role role;
 
@@ -38,6 +40,5 @@ public class User {
     public enum Role {
         USER,
         ADMIN
-
     }
 }

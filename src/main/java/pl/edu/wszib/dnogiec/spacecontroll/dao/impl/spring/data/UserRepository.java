@@ -7,10 +7,11 @@ import pl.edu.wszib.dnogiec.spacecontroll.model.User;
 import java.util.Optional;
 
 /**
- Repozytorium do operacji na encji User.
- Implementuje podstawowe operacje CRUD oraz metodę wyszukującą użytkownika po loginie. */
+ * Repozytorium do operacji na encji User.
+ * Implementuje podstawowe operacje CRUD oraz metodę wyszukującą użytkownika po loginie.
+ */
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
-Optional<User> findByLogin(String login);
+    Optional<User> findByLogin(String login);
 }

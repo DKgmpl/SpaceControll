@@ -7,20 +7,21 @@ import java.util.List;
 
 @Entity
 @Table(name = "app_conference_room")
-@NoArgsConstructor
-@AllArgsConstructor
 @Getter
 @Setter
 @ToString
+@NoArgsConstructor
+@AllArgsConstructor
 public class ConferenceRoom {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String name;
     private String location;
     private int capacity;
-    private String equipment;
-    private String description;
+    private String equipment;   // udogodnienia, np. "Projektor,TV"
+//    private String description;
 
     @OneToMany(mappedBy = "conferenceRoom", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Reservation> reservations;

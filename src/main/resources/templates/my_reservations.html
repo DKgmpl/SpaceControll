@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Moje rezerwacje - SpaceControll</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
+</head>
+<body>
+<div th:replace="~{fragments.html :: menu}"></div>
+<div class="container mt-4">
+    <h2>Moje rezerwacje</h2>
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>Sala</th>
+            <th>Początek</th>
+            <th>Koniec</th>
+            <th>Status</th>
+            <th>Notatka</th>
+            <th>Akcja</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="res : ${myReservations}">
+            <td th:text="${res.conferenceRoom.name}"></td>
+            <td th:text="${#temporals.format(res.startTime, 'yyyy-MM-dd HH:mm')}"></td>
+            <td th:text="${#temporals.format(res.endTime, 'yyyy-MM-dd HH:mm')}"></td>
+            <td th:text="${res.status}"></td>
+            <td th:text="${res.notes}"></td>
+            <td>
+                <form th:action="@{'/reservations/cancel/' + ${res.id}}"
+                      method="post"
+                      th:if="${res.status.name() == 'ACTIVE'
+                             and res.startTime.isAfter(T(java.time.LocalDateTime).now())}">
+                    <button type="submit" class="btn btn-danger btn-sm">Anuluj</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

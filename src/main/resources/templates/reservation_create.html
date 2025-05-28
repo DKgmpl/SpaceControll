@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Rezerwacja sali - SpaceControll</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
+</head>
+<body>
+<!-- Pasek nawigacyjny -->
+<div th:replace="~{fragments.html :: menu}"></div>
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+            <h2>Rezerwacja sali: <span th:text="${room.name}"></span></h2>
+            <p><b>Lokalizacja: </b><span th:text="${room.location}"></span></p>
+            <p><b>Pojemność: </b><span th:text="${room.capacity}"></span></p>
+            <p><b>Udogodnienia: </b><span th:text="${room.equipment}"></span></p>
+
+            <form th:action="@{'/reservations/create/' + ${room.id}}"
+                  th:object="${reservation}" method="post">
+                <div class="mb-3">
+                    <label for="startTime" class="form-label">Data i godzina rozpoczęcia</label>
+                    <input type="datetime-local" th:field="*{startTime}" class="form-control" id="startTime" required>
+                </div>
+                <div class="mb-3">
+                    <label for="endTime" class="form-label">Data i godzina zakończenia</label>
+                    <input type="datetime-local" th:field="*{endTime}" class="form-control" id="endTime" required>
+                </div>
+                <div class="mb-3">
+                    <label for="notes" class="form-label">Notatka</label>
+                    <input type="text" th:field="*{notes}" class="form-control" id="notes"
+                           placeholder="Wprowadź dodatkowe informacje">
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Zarezerwuj</button>
+            </form>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
