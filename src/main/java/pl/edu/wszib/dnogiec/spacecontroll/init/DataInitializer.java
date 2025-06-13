@@ -2,8 +2,8 @@ package pl.edu.wszib.dnogiec.spacecontroll.init;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-import org.springframework.util.DigestUtils;
 import pl.edu.wszib.dnogiec.spacecontroll.dao.impl.spring.data.UserRepository;
 import pl.edu.wszib.dnogiec.spacecontroll.model.User;
 
@@ -12,9 +12,10 @@ import pl.edu.wszib.dnogiec.spacecontroll.model.User;
 public class DataInitializer implements CommandLineRunner {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
-    public void run(String... args) throws Exception {
+    public void run(String... args) {
         String adminLogin = "admin";
 
         if (userRepository.findByLogin(adminLogin).isEmpty()) {
@@ -22,7 +23,7 @@ public class DataInitializer implements CommandLineRunner {
             admin.setName("Admin");
             admin.setSurname("Adminowski");
             admin.setLogin(adminLogin);
-            admin.setPassword(DigestUtils.md5DigestAsHex("admin123".getBytes()));
+            admin.setPassword(passwordEncoder.encode("admin123"));
             admin.setEmail("admin@example.com");
             admin.setRole(User.Role.ADMIN);
             userRepository.save(admin);

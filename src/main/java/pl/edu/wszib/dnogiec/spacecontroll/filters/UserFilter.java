@@ -1,17 +1,15 @@
 package pl.edu.wszib.dnogiec.spacecontroll.filters;
 
-
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.stereotype.Component;
 import pl.edu.wszib.dnogiec.spacecontroll.model.User;
 import pl.edu.wszib.dnogiec.spacecontroll.session.SessionConstants;
 
 import java.io.IOException;
 import java.util.Set;
 
-@Component
+// @Component annotation removed as this filter is replaced by Spring Security
 public class UserFilter implements Filter {
 
     //Zestaw chronionych ścieżek

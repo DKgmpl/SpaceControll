@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pl" xmlns:th="http://www.thymeleaf.org">
+<html lang="pl" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <title>Sale konferencyjne - SpaceControll</title>
@@ -15,14 +15,14 @@
         Aktualnie brak zdefiniowanych sal konferencyjnych w systemie.
         <!-- Możesz dodać: tylko admin widzi link do dodania sali -->
         <!-- Porównuj enum przez .name() -->
-        <div class="col-auto" th:if="${session.user != null and session.user.role.name() == 'ADMIN'}">
+        <div class="col-auto" sec:authorize="hasAuthority('ADMIN')">
             <a class="btn btn-primary" th:href="@{/rooms/add}">Dodaj salę konferencyjną</a>
         </div>
     </div>
 
-    <div class="alert alert-secondary">
-        Zalogowany użytkownik: <span th:text="${session.user?.login}"></span> /
-        Rola: <span th:text="${session.user?.role}"></span>
+    <div class="alert alert-secondary" sec:authorize="isAuthenticated()">
+        Zalogowany użytkownik: <span sec:authentication="name"></span> /
+        Rola: <span sec:authentication="principal.authorities"></span>
     </div>
 
     <!-- Główna sekcja   -->
@@ -43,7 +43,7 @@
             </div>
             <!-- Przycisk "Dodaj salę" tylko dla admina-->
             <div class="col"></div>
-            <div class="col-auto" th:if="${session.user != null and session.user.role.name() == 'ADMIN'}">
+            <div class="col-auto" sec:authorize="hasAuthority('ADMIN')">
                 <a class="btn btn-primary" th:href="@{/rooms/add}">Dodaj salę konferencyjną</a>
             </div>
         </form>

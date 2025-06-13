@@ -1,11 +1,9 @@
 package pl.edu.wszib.dnogiec.spacecontroll.services;
 
 public interface IAuthenticationService {
-    void login(String login, String password);
+    // Spring Security now handles login and logout
 
     void register(String email, String login, String password, String name, String surname);
-
-    void logout();
 
     void showAllData();
 

@@ -1,16 +1,17 @@
 package pl.edu.wszib.dnogiec.spacecontroll.controllers;
 
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import pl.edu.wszib.dnogiec.spacecontroll.dao.impl.spring.data.UserRepository;
 import pl.edu.wszib.dnogiec.spacecontroll.model.ConferenceRoom;
 import pl.edu.wszib.dnogiec.spacecontroll.model.Reservation;
 import pl.edu.wszib.dnogiec.spacecontroll.model.User;
 import pl.edu.wszib.dnogiec.spacecontroll.services.IConferenceRoomService;
 import pl.edu.wszib.dnogiec.spacecontroll.services.IReservationService;
-import pl.edu.wszib.dnogiec.spacecontroll.session.SessionConstants;
 
 import java.time.LocalDateTime;
 
@@ -19,6 +20,7 @@ import java.time.LocalDateTime;
 public class ReservationController {
     private final IReservationService reservationService;
     private final IConferenceRoomService conferenceRoomService;
+    private final UserRepository userRepository;
 
     @GetMapping("/reservations/create/{roomId}")
     public String showReservationForm(@PathVariable Long roomId,
@@ -45,11 +47,10 @@ public class ReservationController {
     @PostMapping("/reservations/create/{roomId}")
     public String createReservation(@PathVariable Long roomId,
                                     @ModelAttribute("reservation") Reservation reservation,
-                                    HttpSession session,
                                     Model model) {
 
         ConferenceRoom room = conferenceRoomService.getRoomById(roomId);
-        User user = (User) session.getAttribute(SessionConstants.USER_KEY);
+        User user = getCurrentUser();
 
         reservation.setConferenceRoom(room);
         reservation.setUser(user);
@@ -68,17 +69,25 @@ public class ReservationController {
 
     //Moje rezerwacje - widok listy rezerwacji użytkownika
     @GetMapping("/reservations/my")
-    public String showMyReservations(HttpSession session, Model model) {
-        User user = (User) session.getAttribute(SessionConstants.USER_KEY);
+    public String showMyReservations(Model model) {
+        User user = getCurrentUser();
         model.addAttribute("myReservations", reservationService.getReservationsForUser(user.getId()));
         return "my_reservations";
     }
 
     //Anulowanie rezerwacji
     @PostMapping("/reservations/cancel/{reservationId}")
-    public String cancelReservation(@PathVariable Long reservationId, HttpSession session) {
-        User user = (User) session.getAttribute(SessionConstants.USER_KEY);
+    public String cancelReservation(@PathVariable Long reservationId) {
+        User user = getCurrentUser();
         reservationService.cancelReservation(reservationId, user.getId());
         return "redirect:/reservations/my";
+    }
+
+    // Helper method to get the current authenticated user
+    private User getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+        return userRepository.findByLogin(currentUsername)
+                .orElseThrow(() -> new RuntimeException("Użytkownik nie znaleziony: " + currentUsername));
     }
 }

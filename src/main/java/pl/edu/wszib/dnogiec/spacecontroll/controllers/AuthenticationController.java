@@ -1,6 +1,5 @@
 package pl.edu.wszib.dnogiec.spacecontroll.controllers;
 
-import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -12,14 +11,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import pl.edu.wszib.dnogiec.spacecontroll.dto.RegistrationForm;
 import pl.edu.wszib.dnogiec.spacecontroll.exceptions.RegisterValidationExemption;
 import pl.edu.wszib.dnogiec.spacecontroll.services.IAuthenticationService;
-import pl.edu.wszib.dnogiec.spacecontroll.session.SessionConstants;
 
 @Controller
 @RequiredArgsConstructor
 public class AuthenticationController {
 
     private final IAuthenticationService authenticationService;
-    private final HttpSession httpSession;
 
     @GetMapping(path = "/login")
     public String loginGet(Model model) {
@@ -27,14 +24,7 @@ public class AuthenticationController {
         return "login";
     }
 
-    @PostMapping(path = "/login")
-    public String loginPost(@ModelAttribute("login") String login, @ModelAttribute("password") String password) {
-        this.authenticationService.login(login, password);
-        if (this.httpSession.getAttribute(SessionConstants.USER_KEY) != null) {
-            return "redirect:/";
-        }
-        return "redirect:/login";
-    }
+    // Login POST is now handled by Spring Security
 
     @GetMapping(path = "/register")
     public String registerGet(Model model) {
@@ -44,9 +34,10 @@ public class AuthenticationController {
     }
 
     @PostMapping(path = "/register")
-    public String registerPost(@Valid @ModelAttribute("registrationForm") RegistrationForm registrationForm, BindingResult bindingResult, Model model) {
+    public String registerPost(@Valid @ModelAttribute("registrationForm") RegistrationForm registrationForm, 
+                              BindingResult bindingResult, Model model) {
         if (bindingResult.hasErrors()) {
-            model.addAttribute("registrationSuccesful", false);
+            model.addAttribute("registrationSuccessful", false);
             // Pozostawiamy widok rejestracji – błędy będą wyświetlone
             return "register";
         }
@@ -56,26 +47,14 @@ public class AuthenticationController {
                     registrationForm.getPassword(),
                     registrationForm.getName(),
                     registrationForm.getSurname());
-            this.authenticationService.showAllData();
             model.addAttribute("registerInfo", "Rejestracja zakończona pomyślnie");
-            model.addAttribute("registrationSuccesful", true);
+            model.addAttribute("registrationSuccessful", true);
+            return "redirect:/login?registered=true";
         } catch (RegisterValidationExemption e) {
             model.addAttribute("registerInfo", e.getMessage());
-            model.addAttribute("registrationSuccesful", false);
-            e.printStackTrace();
+            model.addAttribute("registrationSuccessful", false);
             return "register";
         }
-
-        if (this.httpSession.getAttribute(SessionConstants.USER_KEY) != null) {
-            return "redirect:/";
-        }
-
-        return "register";
     }
-
-    @GetMapping(path = "/logout")
-    public String logout() {
-        this.authenticationService.logout();
-        return "redirect:/";
-    }
+    // Logout is now handled by Spring Security
 }
