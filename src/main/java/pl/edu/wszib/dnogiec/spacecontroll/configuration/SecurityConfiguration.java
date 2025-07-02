@@ -9,22 +9,17 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.DelegatingPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.crypto.password.MessageDigestPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
-
-import java.util.HashMap;
-import java.util.Map;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
-public class SecurityConfig {
+public class SecurityConfiguration {
 
     private final UserDetailsService userDetailsService;
 
@@ -61,7 +56,7 @@ public class SecurityConfig {
         http
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers("/", "/login", "/register", "/css/**", "/js/**").permitAll()
-                .requestMatchers("/rooms/add").hasAuthority("ADMIN")
+                .requestMatchers("/rooms/add", "/rooms/delete/**").hasAuthority("ADMIN")
                 .requestMatchers("/rooms/**", "/reservations", "/reservation_create").authenticated()
                 .anyRequest().authenticated()
             )
@@ -86,15 +81,8 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        // Create a map of encoders with id as key
-        Map<String, PasswordEncoder> encoders = new HashMap<>();
-        // Add MD5 encoder for backward compatibility with existing passwords
-        encoders.put("md5", new MessageDigestPasswordEncoder("MD5"));
-        // Add BCrypt encoder as the preferred encoder for new passwords
-        encoders.put("bcrypt", new BCryptPasswordEncoder());
-
-        // Use DelegatingPasswordEncoder with bcrypt as the default encoder
-        return new DelegatingPasswordEncoder("bcrypt", encoders);
+        // Use BCrypt encoder exclusively for all passwords
+        return new BCryptPasswordEncoder();
     }
 
     @Bean

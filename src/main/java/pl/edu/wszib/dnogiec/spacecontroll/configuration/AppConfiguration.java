@@ -6,5 +6,5 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @ComponentScan("pl.edu.wszib.dnogiec.spacecontroll")
 public class AppConfiguration {
-    // Custom filters removed as they are replaced by Spring Security
+    // Filtry zostały usunięte i podmienione za Spring Security
 }

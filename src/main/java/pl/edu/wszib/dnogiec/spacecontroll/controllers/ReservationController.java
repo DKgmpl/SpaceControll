@@ -83,7 +83,7 @@ public class ReservationController {
         return "redirect:/reservations/my";
     }
 
-    // Helper method to get the current authenticated user
+    //Metoda pomocnicza do pobrania aktualnie zautoryzowanego użytkownika
     private User getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String currentUsername = authentication.getName();

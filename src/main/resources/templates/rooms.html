@@ -69,12 +69,20 @@
                     <span th:if="${!availabilityMap[room.id]}">Zajęta</span>
                 </td>
                 <td>
-                    <a th:if="${availabilityMap[room.id]}"
-                       th:href="@{'/reservations/create/' + ${room.id} + '?from=' + ${fromString} + '&to=' + ${toString}}"
-                       class="btn btn-success btn-sm">Zarezerwuj</a>
-                    <button th:unless="${availabilityMap[room.id]}"
-                            class="btn btn-secondary btn-sm" disabled>Zarezerwuj
-                    </button>
+                    <div class="d-flex gap-2">
+                        <a th:if="${availabilityMap[room.id]}"
+                           th:href="@{'/reservations/create/' + ${room.id} + '?from=' + ${fromString} + '&to=' + ${toString}}"
+                           class="btn btn-success btn-sm">Zarezerwuj</a>
+                        <button th:unless="${availabilityMap[room.id]}"
+                                class="btn btn-secondary btn-sm" disabled>Zarezerwuj
+                        </button>
+
+                        <!-- Przycisk usuwania sali - tylko dla admina -->
+                        <form sec:authorize="hasAuthority('ADMIN')" th:action="@{'/rooms/delete/' + ${room.id}}" method="post" 
+                              onsubmit="return confirm('Czy na pewno chcesz usunąć tę salę konferencyjną? Ta operacja jest nieodwracalna.');">
+                            <button type="submit" class="btn btn-danger btn-sm">Usuń</button>
+                        </form>
+                    </div>
                 </td>
             </tr>
             </tbody>

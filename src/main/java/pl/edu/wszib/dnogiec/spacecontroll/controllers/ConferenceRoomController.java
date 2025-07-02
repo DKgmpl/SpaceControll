@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PathVariable;
 import pl.edu.wszib.dnogiec.spacecontroll.model.ConferenceRoom;
 import pl.edu.wszib.dnogiec.spacecontroll.services.IConferenceRoomService;
 import pl.edu.wszib.dnogiec.spacecontroll.services.IReservationService;
@@ -72,6 +73,13 @@ public class ConferenceRoomController {
     @PostMapping("/rooms/add")
     public String addRoom(@ModelAttribute("room") ConferenceRoom room) {
         conferenceRoomService.save(room);
+        return "redirect:/rooms";
+    }
+
+    // Obsługa usuwania sali konferencyjnej - Tylko dla admina
+    @PostMapping("/rooms/delete/{id}")
+    public String deleteRoom(@PathVariable Long id) {
+        conferenceRoomService.delete(id);
         return "redirect:/rooms";
     }
 }
