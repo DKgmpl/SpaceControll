@@ -66,7 +66,7 @@ public class ConferenceRoomController {
     @GetMapping("/rooms/add")
     public String showAddRoomForm(Model model) {
         model.addAttribute("room", new ConferenceRoom());
-        return "/room_add";
+        return "room_add";
     }
 
     // Obsługa zapisu nowej sali kofnerencyjnej - Tylko dla admina

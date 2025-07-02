@@ -24,8 +24,6 @@ public class AuthenticationController {
         return "login";
     }
 
-    // Login POST is now handled by Spring Security
-
     @GetMapping(path = "/register")
     public String registerGet(Model model) {
         model.addAttribute("registrationForm", new RegistrationForm());
@@ -56,5 +54,4 @@ public class AuthenticationController {
             return "register";
         }
     }
-    // Logout is now handled by Spring Security
 }
