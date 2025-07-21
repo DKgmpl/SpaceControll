@@ -9,7 +9,8 @@
 <div th:replace="~{fragments.html :: menu}"></div>
 <div class="container mt-4">
     <h2>Dostępne sale konferencyjne</h2>
-
+    <div th:if="${info}" class="alert alert-success" th:text="${info}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
     <!-- Informacja, gdy nie ma żadnej sali -->
     <div th:if="${#lists.isEmpty(rooms)}" class="alert alert-info">
         Aktualnie brak zdefiniowanych sal konferencyjnych w systemie.
@@ -70,16 +71,20 @@
                 </td>
                 <td>
                     <div class="d-flex gap-2">
+                        <!-- Przycisk zarezerwuj salę - tylko dla admina -->
                         <a th:if="${availabilityMap[room.id]}"
                            th:href="@{'/reservations/create/' + ${room.id} + '?from=' + ${fromString} + '&to=' + ${toString}}"
                            class="btn btn-success btn-sm">Zarezerwuj</a>
                         <button th:unless="${availabilityMap[room.id]}"
                                 class="btn btn-secondary btn-sm" disabled>Zarezerwuj
                         </button>
-
+                        <!-- Przycisk edycji sali - tylko dla admina -->
+                        <a sec:authorize="hasAuthority('ADMIN')" th:href="@{'/rooms/edit/' + ${room.id}}"
+                           class="btn btn-warning btn-sm">Edytuj</a>
                         <!-- Przycisk usuwania sali - tylko dla admina -->
-                        <form sec:authorize="hasAuthority('ADMIN')" th:action="@{'/rooms/delete/' + ${room.id}}" method="post" 
-                              onsubmit="return confirm('Czy na pewno chcesz usunąć tę salę konferencyjną? Ta operacja jest nieodwracalna.');">
+                        <form sec:authorize="hasAuthority('ADMIN')"
+                        th:action="@{'/rooms/delete/' + ${room.id}}" method="post"
+                        onsubmit="return confirm('Czy na pewno chcesz usunąć tę salę konferencyjną? Ta operacja jest nieodwracalna.');">
                             <button type="submit" class="btn btn-danger btn-sm">Usuń</button>
                         </form>
                     </div>

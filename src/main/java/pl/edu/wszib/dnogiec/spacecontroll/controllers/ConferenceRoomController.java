@@ -1,6 +1,7 @@
 package pl.edu.wszib.dnogiec.spacecontroll.controllers;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -8,6 +9,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import pl.edu.wszib.dnogiec.spacecontroll.model.ConferenceRoom;
 import pl.edu.wszib.dnogiec.spacecontroll.services.IConferenceRoomService;
 import pl.edu.wszib.dnogiec.spacecontroll.services.IReservationService;
@@ -35,6 +37,10 @@ public class ConferenceRoomController {
             @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME)
             LocalDateTime to
     ) {
+
+            System.out.println("info: " + model.asMap().get("info"));
+            System.out.println("error: " + model.asMap().get("error"));
+
         // Pobierz sale
         List<ConferenceRoom> rooms = conferenceRoomService.getAllRooms();
 
@@ -78,8 +84,52 @@ public class ConferenceRoomController {
 
     // Obsługa usuwania sali konferencyjnej - Tylko dla admina
     @PostMapping("/rooms/delete/{id}")
-    public String deleteRoom(@PathVariable Long id) {
-        conferenceRoomService.delete(id);
+    public String deleteRoom(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            conferenceRoomService.delete(id);
+            redirectAttributes.addFlashAttribute("info", "Sala została usunięta.");
+        } catch (DataIntegrityViolationException ex) {
+            redirectAttributes.addFlashAttribute(
+                    "error", "Nie można usunąć sali, ponieważ posiada aktywne powiązane rezerwacje."
+            );
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute(
+                    "error", "Wystąpił nieoczekiwany błąd: " + ex.getMessage()
+            );
+        }
+        return "redirect:/rooms";
+    }
+
+    // Formularz edycji sali konferencyjnej - Tylko dla admina
+    @GetMapping("/rooms/edit/{id}")
+    public String showEditRoomForm(@PathVariable Long id, Model model) {
+        ConferenceRoom room = conferenceRoomService.getRoomById(id);
+        if (room == null) {
+            model.addAttribute("error", "Sala o podanym id nie istnieje.");
+            return "redirect:/rooms";
+        }
+        model.addAttribute("room", room);
+        return "room_edit";
+    }
+
+    // Obsługa edycji sali konferencyjnej - Tylko dla admina
+    @PostMapping("/rooms/edit/{id}")
+    public String editRoom(@PathVariable Long id, @ModelAttribute("room") ConferenceRoom room, RedirectAttributes redirectAttributes) {
+        ConferenceRoom exsistingRoom = conferenceRoomService.getRoomById(id);
+        if(exsistingRoom == null) {
+            redirectAttributes.addFlashAttribute("error", "Sala nie znaleziona.");
+            return "redirect:/rooms";
+        }
+
+        exsistingRoom.setName(room.getName());
+        exsistingRoom.setLocation(room.getLocation());
+        exsistingRoom.setCapacity(room.getCapacity());
+        exsistingRoom.setEquipment(room.getEquipment());
+        // Dodaj kolejne pola, jeśli pojawią się w modelu
+
+        conferenceRoomService.save(exsistingRoom);
+
+        redirectAttributes.addFlashAttribute("info", "Zaktualizowano dane sali.");
         return "redirect:/rooms";
     }
 }

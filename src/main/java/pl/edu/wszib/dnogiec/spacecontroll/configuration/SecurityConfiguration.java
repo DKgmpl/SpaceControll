@@ -14,7 +14,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
@@ -56,7 +55,7 @@ public class SecurityConfiguration {
         http
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers("/", "/login", "/register", "/css/**", "/js/**").permitAll()
-                .requestMatchers("/rooms/add", "/rooms/delete/**").hasAuthority("ADMIN")
+                .requestMatchers("/rooms/add", "/rooms/edit/**", "/rooms/delete/**").hasAuthority("ADMIN")
                 .requestMatchers("/rooms/**", "/reservations", "/reservation_create").authenticated()
                 .anyRequest().authenticated()
             )
@@ -69,7 +68,7 @@ public class SecurityConfiguration {
                 .permitAll()
             )
             .logout(logout -> logout
-                .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+                .logoutUrl("/logout")
                 .logoutSuccessHandler(logoutSuccessHandler())
                 .invalidateHttpSession(true)
                 .clearAuthentication(true)
