@@ -1,7 +1,13 @@
 package pl.edu.wszib.dnogiec.spacecontroll.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.FutureOrPresent;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import org.springframework.format.annotation.DateTimeFormat;
+import pl.edu.wszib.dnogiec.spacecontroll.validation.EndAfterStart;
+import pl.edu.wszib.dnogiec.spacecontroll.validation.MaxDurationHours;
+import pl.edu.wszib.dnogiec.spacecontroll.validation.SameDay;
 
 import java.time.LocalDateTime;
 
@@ -12,6 +18,9 @@ import java.time.LocalDateTime;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
+@EndAfterStart
+@SameDay
+@MaxDurationHours(value = 12)
 public class Reservation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,7 +34,13 @@ public class Reservation {
     @JoinColumn(name = "user_id")   //, referencedColumnName = "id"
     private User user;
 
+    @NotNull(message = "Data i godzina rozpoczęcia są wymagane.")
+    @FutureOrPresent(message = "Data rozpoczęcia nie może być w przeszłości.")
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm")
     private LocalDateTime startTime;
+
+    @NotNull(message = "Data i godzina zakończenia są wymagane")
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm")
     private LocalDateTime endTime;
 
     // Status rezerwacji; przykładowe wartości: ACTIVE - aktywna, CANCELLED - anulowana, COMPLETED - zakończona

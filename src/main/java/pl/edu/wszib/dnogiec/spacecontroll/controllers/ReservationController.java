@@ -1,5 +1,6 @@
 package pl.edu.wszib.dnogiec.spacecontroll.controllers;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -40,13 +41,14 @@ public class ReservationController {
             }
         }
         model.addAttribute("room", room);
-        model.addAttribute("reservation", new Reservation());
+        model.addAttribute("reservation", reservation);
         return "reservation_create";
     }
 
     @PostMapping("/reservations/create/{roomId}")
     public String createReservation(@PathVariable Long roomId,
-                                    @ModelAttribute("reservation") Reservation reservation,
+                                    @Valid @ModelAttribute("reservation") Reservation reservation,
+                                    org.springframework.validation.BindingResult bindingResult,
                                     Model model) {
 
         ConferenceRoom room = conferenceRoomService.getRoomById(roomId);
@@ -55,7 +57,13 @@ public class ReservationController {
         reservation.setConferenceRoom(room);
         reservation.setUser(user);
 
-        // Walidacja + próba utworzenia rezerwacji
+        // Walidacja formularza (JSR-380)
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("room", room);
+            return "reservation_create";
+        }
+
+        // Logika biznesowa: dostępność sal + próba utworzenia rezerwacji
         boolean success = reservationService.createReservation(reservation);
 
         if (!success) {

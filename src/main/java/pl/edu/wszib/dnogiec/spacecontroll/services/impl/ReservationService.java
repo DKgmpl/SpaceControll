@@ -35,6 +35,7 @@ public class ReservationService implements IReservationService {
         if (from == null || to == null) return false;
         if (from.isBefore(LocalDateTime.now())) return false;
         if (from.isAfter(to) || from.isEqual(to)) return false;
+        if (!from.toLocalDate().equals(to.toLocalDate())) return false; //Rezerwacja tylko w tym samym dniu
         return isRoomAvailable(roomId, from, to);
     }
 

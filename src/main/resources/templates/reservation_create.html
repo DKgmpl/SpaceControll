@@ -21,15 +21,22 @@
                 <div class="mb-3">
                     <label for="startTime" class="form-label">Data i godzina rozpoczęcia</label>
                     <input type="datetime-local" th:field="*{startTime}" class="form-control" id="startTime" required>
+                    <div class="text-danger" th:if="${#fields.hasErrors('startTime')}" th:errors="*{startTime}"></div>
                 </div>
                 <div class="mb-3">
                     <label for="endTime" class="form-label">Data i godzina zakończenia</label>
                     <input type="datetime-local" th:field="*{endTime}" class="form-control" id="endTime" required>
+                    <div class="text-danger" th:if="${#fields.hasErrors('endTime')}" th:errors="*{endTime}"></div>
                 </div>
                 <div class="mb-3">
                     <label for="notes" class="form-label">Notatka</label>
                     <input type="text" th:field="*{notes}" class="form-control" id="notes"
                            placeholder="Wprowadź dodatkowe informacje">
+                </div>
+                <div class="alert alert-danger" th:if="${#fields.hasGlobalErrors()}">
+                    <ul class="mb-0">
+                        <li th:each="e : ${#fields.globalErrors()}" th:text="${e}"></li>
+                    </ul>
                 </div>
                 <button type="submit" class="btn btn-primary w-100">Zarezerwuj</button>
             </form>
