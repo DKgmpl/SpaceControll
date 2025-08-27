@@ -30,6 +30,11 @@
                     <div class="text-danger" th:if="${#fields.hasErrors('endTime')}" th:errors="*{endTime}"></div>
                 </div>
                 <div class="mb-3">
+                    <label for="expectedAttendees" class="form-label">Liczba uczestników</label>
+                    <input type="number" min="1" th:field="*{expectedAttendees}" class="form-control"
+                           id="expectedAttendees">
+                </div>
+                <div class="mb-3">
                     <label for="notes" class="form-label">Notatka</label>
                     <input type="text" th:field="*{notes}" class="form-control" id="notes"
                            placeholder="Wprowadź dodatkowe informacje">

@@ -36,11 +36,11 @@ public class Reservation {
 
     @NotNull(message = "Data i godzina rozpoczęcia są wymagane.")
     @FutureOrPresent(message = "Data rozpoczęcia nie może być w przeszłości.")
-    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm")
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime startTime;
 
     @NotNull(message = "Data i godzina zakończenia są wymagane")
-    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm")
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime endTime;
 
     // Status rezerwacji; przykładowe wartości: ACTIVE - aktywna, CANCELLED - anulowana, COMPLETED - zakończona
@@ -48,6 +48,16 @@ public class Reservation {
     private ReservationStatus status;
 
     private String notes;
+
+    private Integer expectedAttendees;
+    private LocalDateTime checkInTime;
+    private LocalDateTime createdAt;
+    private LocalDateTime cancelledAt;
+
+    @PrePersist
+    public void prePersist() {
+        if (createdAt == null) createdAt = LocalDateTime.now();
+    }
 
     public enum ReservationStatus {
         ACTIVE,

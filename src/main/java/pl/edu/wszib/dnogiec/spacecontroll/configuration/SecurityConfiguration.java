@@ -7,6 +7,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -54,9 +55,10 @@ public class SecurityConfiguration {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers("/", "/login", "/register", "/css/**", "/js/**").permitAll()
-                .requestMatchers("/rooms/add", "/rooms/edit/**", "/rooms/delete/**").hasAuthority("ADMIN")
-                .requestMatchers("/rooms/**", "/reservations", "/reservation_create").authenticated()
+                .requestMatchers("/", "/login", "/register", "/css/", "/js/").permitAll()
+                .requestMatchers("/h2-console/**").permitAll()  //Info: Opcja DEV
+                .requestMatchers("/rooms/add", "/rooms/edit/", "/rooms/delete/", "/analytics").hasAuthority("ADMIN")
+                .requestMatchers("/rooms/", "/reservations/**", "/reservation_create").authenticated()
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
@@ -73,7 +75,9 @@ public class SecurityConfiguration {
                 .invalidateHttpSession(true)
                 .clearAuthentication(true)
                 .permitAll()
-            );
+            )
+                //Info: Opcja DEV
+            .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin));
 
         return http.build();
     }

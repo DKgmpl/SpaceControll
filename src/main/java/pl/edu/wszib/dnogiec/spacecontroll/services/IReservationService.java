@@ -23,6 +23,8 @@ public interface IReservationService {
      */
     boolean createReservation(Reservation reservation);
 
+    boolean checkIn(Long reservationId, Long userId);
+
     List<Reservation> getReservationsForUser(Long userId);
 
     List<Reservation> getAllReservations();

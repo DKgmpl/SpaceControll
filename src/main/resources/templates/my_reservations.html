@@ -35,6 +35,13 @@
                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                     <button type="submit" class="btn btn-danger btn-sm">Anuluj</button>
                 </form>
+                <form th:action="@{'/reservations/checkin/' + ${res.id}}" method="post"
+                      th:if="${res.status.name() == 'ACTIVE' and res.checkInTime == null and
+                      T(java.time.LocalDateTime).now().isAfter(res.startTime.minusMinutes(15)) and
+                      T(java.time.LocalDateTime).now().isBefore(res.startTime.plusMinutes(15))}">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <button type="submit" class="btn btn-success btn-sm mt-1">Potwierdź obecność</button>
+                </form>
             </td>
         </tr>
         </tbody>

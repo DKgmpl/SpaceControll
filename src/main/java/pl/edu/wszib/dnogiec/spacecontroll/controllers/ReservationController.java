@@ -91,6 +91,13 @@ public class ReservationController {
         return "redirect:/reservations/my";
     }
 
+    @PostMapping("/reservations/checkIn/{reservationId}")
+    public String checkIn(@PathVariable Long reservationId) {
+        User user = getCurrentUser();
+        reservationService.checkIn(reservationId, user.getId());
+        return "redirect:/reservations/my";
+    }
+
     //Metoda pomocnicza do pobrania aktualnie zautoryzowanego użytkownika
     private User getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
