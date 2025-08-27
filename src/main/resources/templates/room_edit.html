@@ -12,6 +12,7 @@
     <div class="col-12 col-md-8 col-lg-6">
       <h2>Edytuj salę konferencyjną</h2>
       <form th:action="@{'/rooms/edit/' + ${room.id}}" th:object="${room}" method="post">
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
         <div class="mb-3">
           <label for="name" class="form-label">Nazwa sali</label>
           <input type="text" th:field="*{name}" class="form-control" id="name" required>

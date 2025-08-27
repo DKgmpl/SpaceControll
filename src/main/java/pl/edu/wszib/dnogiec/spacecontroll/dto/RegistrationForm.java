@@ -5,8 +5,10 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import pl.edu.wszib.dnogiec.spacecontroll.validation.FieldMatch;
 
 @Data
+@FieldMatch(first = "password", second = "confirmPassword", message = "Hasła muszą być identyczne")
 public class RegistrationForm {
     @NotBlank(message = "Email nie może być pusty")
     @Email(message = "Podaj poprawny adres email")
@@ -18,8 +20,14 @@ public class RegistrationForm {
     private String login;
 
     @NotBlank(message = "Hasło nie może być puste")
-    @Size(min = 8, message = "Hasło musi zawierać co najmniej 8 znaków")
+    @Pattern(
+            regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}$",
+            message = "Hasło musi zawierać min. 8 znaków i zawierać małą, wielką literę oraz cyfrę"
+    )
     private String password;
+
+    @NotBlank(message = "Powtórz hasło")
+    private String confirmPassword;
 
     @NotBlank(message = "Imię nie może być puste")
     @Size(min = 2, max = 30, message = "Imię musi mieć od 2 do 30 znaków")

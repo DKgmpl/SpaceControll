@@ -21,16 +21,20 @@ public class AuthenticationService implements IAuthenticationService {
 
     @Override
     public void register(String email, String login, String password, String name, String surname) {
-        Optional<User> existingUser = this.userRepository.findByLogin(login);
-        if (existingUser.isPresent()) {
-            this.httpSession.setAttribute("registerInfo", "Użytkownik o podanym loginie już istnieje");
-            System.out.println("Błąd rejestracji nowego użytkownika - Użytkownik o podanym loginie już istnieje");
+        String normLogin = login.trim().toLowerCase(java.util.Locale.ROOT);
+        String normEmail = email.trim().toLowerCase(java.util.Locale.ROOT);
+
+        if (userRepository.findByLogin(normLogin).isPresent()) {
             throw new RegisterValidationExemption("Użytkownik o podanym loginie już istnieje");
         }
+        if (userRepository.findByEmail(normEmail).isPresent()) {
+            throw new RegisterValidationExemption("Użytkownik o podanym adresie email już istnieje");
+        }
+
         User newUser = new User();
-        newUser.setLogin(login);
+        newUser.setLogin(normLogin);
         newUser.setPassword(passwordEncoder.encode(password)); // Use Spring Security's password encoder
-        newUser.setEmail(email);
+        newUser.setEmail(normEmail);
         newUser.setName(name);
         newUser.setSurname(surname);
         newUser.setRole(User.Role.USER);

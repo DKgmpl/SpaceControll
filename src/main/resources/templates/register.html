@@ -13,6 +13,7 @@
             <div th:if="${registerInfo}" class="alert alert-info" th:text="${registerInfo}"></div>
             <!-- Formularz powiązany z obiektem RegistrationForm -->
             <form th:action="@{/register}" th:object="${registrationForm}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                 <div class="mb-3">
                     <label for="email" class="form-label">Email</label>
                     <input type="text" th:field="*{email}" class="form-control" id="email" placeholder="Wprowadź email">
@@ -33,6 +34,13 @@
                 </div>
 
                 <div class="mb-3">
+                    <label for="confirmPassword" class="form-label">Powtórz hasło</label>
+                    <input type="password" th:field="*{confirmPassword}" class="form-control" id="confirmPassword"
+                           placeholder="Powtórz hasło">
+                    <div th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}" class="text-danger"></div>
+                </div>
+
+                <div class="mb-3">
                     <label for="name" class="form-label">Imię</label>
                     <input type="text" th:field="*{name}" class="form-control" id="name" placeholder="Wprowadź imię">
                     <div th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="text-danger"></div>
@@ -43,6 +51,13 @@
                     <input type="text" th:field="*{surname}" class="form-control" id="surname"
                            placeholder="Wprowadź nazwisko">
                     <div th:if="${#fields.hasErrors('surname')}" th:errors="*{surname}" class="text-danger"></div>
+                </div>
+
+                <!--Błędy globalne FieldMatch itp.-->
+                <div class="alert alert-danger" th:if="${#fields.hasGlobalErrors()}">
+                    <ul class="mb-0">
+                        <li th:each="e : ${#fields.globalErrors()}" th:text="${e}"></li>
+                    </ul>
                 </div>
 
                 <button type="submit" class="btn btn-primary w-100">Zarejestruj się</button>

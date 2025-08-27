@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 import pl.edu.wszib.dnogiec.spacecontroll.dao.impl.spring.data.UserRepository;
 import pl.edu.wszib.dnogiec.spacecontroll.model.User;
 
-import java.sql.SQLOutput;
+import java.util.Locale;
 
 @Component
 @RequiredArgsConstructor
@@ -19,15 +19,19 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) {
         String adminLogin = "admin";
+        String adminPassword = "admin123";
+        String adminEmail = "admin@example.com";
         String userLogin = "user";
+        String userPassword = "user123";
+        String userEmail = "user@example.com";
 
         if (userRepository.findByLogin(adminLogin).isEmpty()) {
             User admin = new User();
             admin.setName("Admin");
             admin.setSurname("Adminowski");
-            admin.setLogin(adminLogin);
-            admin.setPassword(passwordEncoder.encode("admin123"));
-            admin.setEmail("admin@example.com");
+            admin.setLogin(adminLogin.toLowerCase(Locale.ROOT));
+            admin.setPassword(passwordEncoder.encode(adminPassword));
+            admin.setEmail(adminEmail.toLowerCase(Locale.ROOT));
             admin.setRole(User.Role.ADMIN);
             userRepository.save(admin);
             System.out.println("Utworzono użytkownika ADMIN: login=admin, hasło=admin123");
@@ -37,9 +41,9 @@ public class DataInitializer implements CommandLineRunner {
             User user = new User();
             user.setName("User");
             user.setSurname("Userowski");
-            user.setLogin(userLogin);
-            user.setPassword(passwordEncoder.encode("user123"));
-            user.setEmail("user@example.com");
+            user.setLogin(userLogin.toLowerCase(Locale.ROOT));
+            user.setPassword(passwordEncoder.encode(userPassword));
+            user.setEmail(userEmail.toLowerCase(Locale.ROOT));
             user.setRole(User.Role.USER);
             userRepository.save(user);
             System.out.println("Utworzono użytkownika USER: login=user, hasło=user123");

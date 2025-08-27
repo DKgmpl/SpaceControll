@@ -29,6 +29,7 @@
     <!-- Główna sekcja   -->
     <div th:unless="${#lists.isEmpty(rooms)}">
         <form method="get" th:action="@{/rooms}" class="row g-3 align-items-end mb-4">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
             <div class="col-auto">
                 <label for="from" class="form-label mb-0">Od:</label>
                 <input type="datetime-local" class="form-control" id="from" name="from"
@@ -85,6 +86,7 @@
                         <form sec:authorize="hasAuthority('ADMIN')"
                         th:action="@{'/rooms/delete/' + ${room.id}}" method="post"
                         onsubmit="return confirm('Czy na pewno chcesz usunąć tę salę konferencyjną? Ta operacja jest nieodwracalna.');">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                             <button type="submit" class="btn btn-danger btn-sm">Usuń</button>
                         </form>
                     </div>

@@ -20,8 +20,9 @@ public class UserDetailsService implements org.springframework.security.core.use
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         System.out.println("Próba uwierzytelnienia dla użytkownika: " + username);
         try {
-            User user = userRepository.findByLogin(username)
-                    .orElseThrow(() -> new UsernameNotFoundException("Nie znaleziono Użytkownika z loginem: " + username));
+            String uname = username == null ? "" : username.trim().toLowerCase(java.util.Locale.ROOT);
+            User user = userRepository.findByLogin(uname)
+                    .orElseThrow(() -> new UsernameNotFoundException("Nie znaleziono Użytkownika z loginem: " + uname));
 
             System.out.println("Użytkownik znaleziony: " + user.getLogin() + ", Rola: " + user.getRole().name());
             return new org.springframework.security.core.userdetails.User(

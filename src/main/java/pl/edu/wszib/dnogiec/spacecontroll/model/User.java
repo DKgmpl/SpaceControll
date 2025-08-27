@@ -17,25 +17,17 @@ public class User {
 
     private String name;
     private String surname;
+
+    @Column(unique = true, nullable = false)
     private String login;
+
     private String password;
+
+    @Column(unique = true, nullable = false)
     private String email;
 
     @Enumerated(EnumType.STRING)
     private Role role;
-
-    public User(Long id, String name, String surname, String login, String password, Role role) {
-        this.id = id;
-        this.name = name;
-        this.surname = surname;
-        this.login = login;
-        this.password = password;
-        this.role = role;
-    }
-
-    public User(Long id) {
-        this.id = id;
-    }
 
     public enum Role {
         USER,

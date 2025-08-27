@@ -32,6 +32,7 @@
                       method="post"
                       th:if="${res.status.name() == 'ACTIVE'
                              and res.startTime.isAfter(T(java.time.LocalDateTime).now())}">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                     <button type="submit" class="btn btn-danger btn-sm">Anuluj</button>
                 </form>
             </td>
