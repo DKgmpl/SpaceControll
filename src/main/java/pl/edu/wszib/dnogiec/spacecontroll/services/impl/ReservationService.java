@@ -71,7 +71,7 @@ public class ReservationService implements IReservationService {
                     && r.getStatus() == Reservation.ReservationStatus.ACTIVE
                     && r.getStartTime().isAfter(LocalDateTime.now())){
                 r.setStatus(Reservation.ReservationStatus.CANCELLED);
-                r.setCancelledAt(LocalDateTime.now());;
+                r.setCancelledAt(LocalDateTime.now());
                 reservationRepository.save(r);
                 return true;
             }

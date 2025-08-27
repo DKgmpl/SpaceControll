@@ -1,12 +1,10 @@
 package pl.edu.wszib.dnogiec.spacecontroll.jobs;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.cglib.core.Local;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import pl.edu.wszib.dnogiec.spacecontroll.dao.impl.spring.data.ReservationRepository;
 import pl.edu.wszib.dnogiec.spacecontroll.model.Reservation;
-import pl.edu.wszib.dnogiec.spacecontroll.services.impl.ReservationService;
 
 import java.time.LocalDateTime;
 import java.util.List;
