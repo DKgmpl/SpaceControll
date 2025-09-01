@@ -8,6 +8,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import pl.edu.wszib.dnogiec.spacecontroll.validation.EndAfterStart;
 import pl.edu.wszib.dnogiec.spacecontroll.validation.MaxDurationHours;
 import pl.edu.wszib.dnogiec.spacecontroll.validation.SameDay;
+import pl.edu.wszib.dnogiec.spacecontroll.validation.ValidationGroups;
 
 import java.time.LocalDateTime;
 
@@ -35,7 +36,8 @@ public class Reservation {
     private User user;
 
     @NotNull(message = "Data i godzina rozpoczęcia są wymagane.")
-    @FutureOrPresent(message = "Data rozpoczęcia nie może być w przeszłości.")
+    @FutureOrPresent(message = "Data rozpoczęcia nie może być w przeszłości.",
+            groups = ValidationGroups.WebChecks.class)
     @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime startTime;
 

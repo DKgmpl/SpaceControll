@@ -1,11 +1,11 @@
 package pl.edu.wszib.dnogiec.spacecontroll.controllers;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import pl.edu.wszib.dnogiec.spacecontroll.dao.impl.spring.data.UserRepository;
 import pl.edu.wszib.dnogiec.spacecontroll.model.ConferenceRoom;
@@ -13,6 +13,7 @@ import pl.edu.wszib.dnogiec.spacecontroll.model.Reservation;
 import pl.edu.wszib.dnogiec.spacecontroll.model.User;
 import pl.edu.wszib.dnogiec.spacecontroll.services.IConferenceRoomService;
 import pl.edu.wszib.dnogiec.spacecontroll.services.IReservationService;
+import pl.edu.wszib.dnogiec.spacecontroll.validation.ValidationGroups;
 
 import java.time.LocalDateTime;
 
@@ -47,7 +48,7 @@ public class ReservationController {
 
     @PostMapping("/reservations/create/{roomId}")
     public String createReservation(@PathVariable Long roomId,
-                                    @Valid @ModelAttribute("reservation") Reservation reservation,
+                                    @Validated(ValidationGroups.WebChecks.class) @ModelAttribute("reservation") Reservation reservation,
                                     org.springframework.validation.BindingResult bindingResult,
                                     Model model) {
 
