@@ -60,6 +60,9 @@ public class AnalyticsController {
         model.addAttribute("cancel", cancel);
         model.addAttribute("rightSizing", rightSizing);
         model.addAttribute("peakOccupancy", peakOccupancy);
+        model.addAttribute("startHour", startHour);
+        model.addAttribute("endHour", endHour);
+
 
         return "analytics";
     }

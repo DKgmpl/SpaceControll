@@ -1,0 +1,19 @@
+/* Analytics page styles */
+.hint {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.help-icon {
+    cursor: help;
+    margin-left: .25rem;
+    color: #6c757d;
+}
+
+.metric-card {
+    height: 100%;
+}
+
+.metric-card .progress {
+    height: 1rem;
+}
