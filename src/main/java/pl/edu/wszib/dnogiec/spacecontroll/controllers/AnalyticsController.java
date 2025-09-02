@@ -1,6 +1,7 @@
 package pl.edu.wszib.dnogiec.spacecontroll.controllers;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -17,6 +18,12 @@ import java.time.LocalTime;
 public class AnalyticsController {
     private final AnalyticsService analyticsService;
 
+    @Value("${app.business-hours.start:8}")
+    private int startHour;
+
+    @Value("${app.business-hours.end:18}")
+    private int endHour;
+
     @GetMapping("/analytics")
     public String analytics(
             @RequestParam(required = false)
@@ -27,8 +34,8 @@ public class AnalyticsController {
             LocalDateTime to,
             Model model) {
 
-        int startHour = 8;
-        int endHour = 18;
+//        int startHour = 8;
+//        int endHour = 18;
 
         LocalDate today = LocalDate.now();
         LocalTime workStart = LocalTime.of(startHour, 0);
