@@ -49,6 +49,7 @@ public class AnalyticsService {
 
     // Liczenie w godzinach pracy (8-18) (zarówno used, jak i available)
     public UtilizationResult utilizationBusinessHours(LocalDateTime from, LocalDateTime to, int startHour, int endHour) {
+        validateHours(startHour, endHour);
         var intersecting = reservationRepository.findAll().stream()
                 .filter(r -> r.getStatus() != Reservation.ReservationStatus.CANCELLED)
                 .filter(r -> r.getStartTime().isBefore(to) && r.getEndTime().isAfter(from))
@@ -134,6 +135,12 @@ public class AnalyticsService {
         }
         return Math.max(0, total);
     }
+
+    private static void validateHours(int start, int end) {
+        if (start < 0 || start >= 24 || end <= start || end > 24)
+            throw new IllegalArgumentException("Nieprawidłowe godziny pracy: " + start + "-" + end);
+    }
+
 
     private static long overlapWithBusinessWindows(LocalDateTime rs, LocalDateTime re,
                                                    LocalDateTime from, LocalDateTime to,
