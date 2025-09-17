@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="https://www.thymeleaf.org">
+<head th:replace="~{fragments.html :: head('Eksporty - SpaceControll')}">
+</head>
+<body>
+<div th:replace="~{fragments.html :: menu}"></div>
+<div class="container mt-4">
+    <h2 class="mb-3">Eksporty</h2>
+    <!-- Presety zakresów (ustawiają pola poniżej przez JS) -->
+    <div class="mb-3"><span class="me-2">Szybkie zakresy:</span>
+        <button class="btn btn-sm btn-outline-secondary me-1" type="button" data-preset="last7">Ostatnie 7 dni</button>
+        <button class="btn btn-sm btn-outline-secondary me-1" type="button" data-preset="thisMonth">Bieżący miesiąc
+        </button>
+        <button class="btn btn-sm btn-outline-secondary me-1" type="button" data-preset="prevWeek">Poprzedni tydzień
+        </button>
+    </div>
+    <!-- Wspólne pola zakresu (kopiowane do obu formularzy przez JS) -->
+    <div class="row g-3 align-items-end mb-3">
+        <div class="col-auto">
+            <label for="rangeFrom" class="form-label mb-0">Od:</label>
+            <input type="datetime-local" class="form-control" id="rangeFrom"
+                   th:value="${#temporals.format(from, 'yyyy-MM-dd''T''HH:mm')}"/>
+        </div>
+        <div class="col-auto"><label for="rangeTo" class="form-label mb-0">Do:</label>
+            <input type="datetime-local" class="form-control" id="rangeTo"
+                   th:value="${#temporals.format(to, 'yyyy-MM-dd''T''HH:mm')}"/>
+        </div>
+    </div>
+    <div class="row g-3">
+        <!-- Eksport rezerwacji -->
+        <div class="col-12 col-lg-6">
+            <div class="card p-3">
+                <h5>Eksport rezerwacji CSV</h5>
+                <form th:action="@{/reservations/export}" method="get" id="form-reservations">
+                    <!-- Hidden z zakresami – JS kopiuje wartości z rangeFrom/rangeTo -->
+                    <input type="hidden" name="from" id="resFrom">
+                    <input type="hidden" name="to" id="resTo">
+                    <div class="mb-3">
+                        <label for="roomId" class="form-label">Sala (opcjonalnie)</label>
+                        <select class="form-select" id="roomId" name="roomId">
+                            <option value="">— wszystkie —</option>
+                            <option th:each="r : ${rooms}" th:value="${r.id}"
+                                    th:text="${r.name + ' (' + r.location + ')'}"></option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Status (opcjonalnie)</label>
+                        <select class="form-select" id="status" name="status">
+                            <option value="">— wszystkie —</option>
+                            <option th:each="s : ${statuses}" th:value="${s.name()}" th:text="${s.name()}"></option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-outline-secondary">Pobierz CSV rezerwacji</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Eksport metryk analityki -->
+        <div class="col-12 col-lg-6">
+            <div class="card p-3">
+                <h5>Eksport metryk CSV</h5>
+                <form th:action="@{/analytics/export}" method="get" id="form-analytics">
+                    <!-- Hidden z zakresami – JS kopiuje wartości z rangeFrom/rangeTo -->
+                    <input type="hidden" name="from" id="anFrom">
+                    <input type="hidden" name="to" id="anTo">
+
+                    <p class="text-muted mb-1">Zawiera: utilized/dostępne minuty, utilization%, no-show, cancellation,
+                        right-sizing, peak.</p>
+                    <button type="submit" class="btn btn-secondary">Pobierz CSV metryk</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<th:block th:replace="~{fragments.html :: scripts}"></th:block>
+
+<script th:src="@{/js/exports.js}"></script>
+</body>
+</html>

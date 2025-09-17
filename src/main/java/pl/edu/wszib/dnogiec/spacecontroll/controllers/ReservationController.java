@@ -1,6 +1,10 @@
 package pl.edu.wszib.dnogiec.spacecontroll.controllers;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -15,7 +19,10 @@ import pl.edu.wszib.dnogiec.spacecontroll.services.IConferenceRoomService;
 import pl.edu.wszib.dnogiec.spacecontroll.services.IReservationService;
 import pl.edu.wszib.dnogiec.spacecontroll.validation.ValidationGroups;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
@@ -76,6 +83,50 @@ public class ReservationController {
         return "redirect:/rooms";
     }
 
+    @GetMapping("/reservations/export")
+    public ResponseEntity<byte[]> exportReservationsCsv(
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
+            @RequestParam(required = false) Long roomId,
+            @RequestParam(required = false) Reservation.ReservationStatus status){
+        List<Reservation> list = reservationService.getAllReservations();
+
+        // Filtry (in-memory)
+        if (from != null) list = list.stream().filter(r -> !r.getEndTime().isBefore(from)).toList();
+        if (to != null) list = list.stream().filter(r -> !r.getStartTime().isAfter(to)).toList();
+        if (roomId != null) list = list.stream().filter(r -> r.getConferenceRoom() != null && roomId.equals(r.getConferenceRoom().getId())).toList();
+        if (status != null) list = list.stream().filter(r -> r.getStatus() == status).toList();
+
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        StringBuilder sb = new StringBuilder();
+        sb.append("id;room;location;capacity;user;start;end;status;expectedAttendees;checkInTime;createdAt;cancelledAt;notes\n");
+        for (Reservation r : list) {
+            sb.append(r.getId()).append(';')
+                    .append(s(r.getConferenceRoom() != null ? r.getConferenceRoom().getName() : "")).append(';')
+                    .append(s(r.getConferenceRoom() != null ? r.getConferenceRoom().getLocation() : "")).append(';')
+                    .append(r.getConferenceRoom() != null ? r.getConferenceRoom().getCapacity() : "").append(';')
+                    .append(s(r.getUser() != null ? r.getUser().getLogin() : "")).append(';')
+                    .append(r.getStartTime() != null ? fmt.format(r.getStartTime()) : "").append(';')
+                    .append(r.getEndTime() != null ? fmt.format(r.getEndTime()) : "").append(';')
+                    .append(r.getStatus() != null ? r.getStatus().name() : "").append(';')
+                    .append(r.getExpectedAttendees() != null ? r.getExpectedAttendees() : "").append(';')
+                    .append(r.getCheckInTime() != null ? fmt.format(r.getCheckInTime()) : "").append(';')
+                    .append(r.getCreatedAt() != null ? fmt.format(r.getCreatedAt()) : "").append(';')
+                    .append(r.getCancelledAt() != null ? fmt.format(r.getCancelledAt()) : "").append(';')
+                    .append(s(r.getNotes() != null ? r.getNotes() : "")).append('\n');
+        }
+
+        byte[] bom = new byte[] {(byte)0xEF,(byte)0xBB,(byte)0xBF};
+        byte[] body = (new String(bom, StandardCharsets.UTF_8) + sb).getBytes(StandardCharsets.UTF_8);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=reservations.csv")
+                .contentType(new MediaType("text", "csv", StandardCharsets.UTF_8))
+                .body(body);
+    }
+
     //Moje rezerwacje - widok listy rezerwacji użytkownika
     @GetMapping("/reservations/my")
     public String showMyReservations(Model model) {
@@ -105,5 +156,12 @@ public class ReservationController {
         String currentUsername = authentication.getName();
         return userRepository.findByLogin(currentUsername)
                 .orElseThrow(() -> new RuntimeException("Użytkownik nie znaleziony: " + currentUsername));
+    }
+
+    //Pomocnik do escapingu CSV
+    private static String s(String v) {
+        if (v == null) return "";
+        String escaped = v.replace("\"", "\"\"");
+        return "\"" + escaped + "\"";
     }
 }

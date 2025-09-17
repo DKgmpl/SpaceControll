@@ -57,7 +57,8 @@ public class SecurityConfiguration {
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers("/", "/login", "/register", "/css/", "/js/").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()  //Info: Opcja DEV
-                .requestMatchers("/rooms/add", "/rooms/edit/", "/rooms/delete/", "/analytics").hasAuthority("ADMIN")
+                .requestMatchers("/rooms/add", "/rooms/edit/", "/rooms/delete/", "/analytics",
+                        "/analytics/export", "/reservations/export", "/exports").hasAuthority("ADMIN")
                 .requestMatchers("/rooms/", "/reservations/**", "/reservation_create").authenticated()
                 .anyRequest().authenticated()
             )

@@ -66,7 +66,7 @@
                 </td>
                 <td>
                     <div class="d-flex gap-2">
-                        <!-- Przycisk zarezerwuj salę - tylko dla admina -->
+                        <!-- Przycisk zarezerwuj salę - dla wszystkich użytkowników -->
                         <a th:if="${availabilityMap[room.id]}"
                            th:href="@{'/reservations/create/' + ${room.id} + '?from=' + ${fromString} + '&to=' + ${toString}}"
                            class="btn btn-success btn-sm">Zarezerwuj</a>
