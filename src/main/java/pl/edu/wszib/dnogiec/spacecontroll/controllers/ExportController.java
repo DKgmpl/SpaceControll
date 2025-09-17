@@ -9,7 +9,6 @@ import pl.edu.wszib.dnogiec.spacecontroll.services.IConferenceRoomService;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 
 @Controller
 @RequiredArgsConstructor
