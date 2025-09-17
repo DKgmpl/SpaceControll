@@ -5,7 +5,11 @@ import org.springframework.stereotype.Service;
 import pl.edu.wszib.dnogiec.spacecontroll.dao.impl.spring.data.ReservationRepository;
 import pl.edu.wszib.dnogiec.spacecontroll.model.Reservation;
 
+import java.time.DayOfWeek;
+import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -16,11 +20,83 @@ public class AnalyticsService {
 
     public record UtilizationResult(long usedMinutes, long availableMinutes, double utilization) {
     }
+
     public record RateResult(long numerator, long denominator, double rate) {
     }
+
     public record PeakOccupancyResult(int peak, LocalDateTime at) {
     }
+
     public record RightSizingResult(double avgDifference, long sampleSize) {
+    }
+
+    public record HeatmapData(List<String> days, List<String> hours, double[][] values) {
+    }
+
+    public HeatmapData utilizationHeatmap(LocalDateTime from, LocalDateTime to, int startHour, int endHour) {
+        int hoursCount = Math.max(0, endHour - startHour);
+        if (hoursCount == 0) {
+            return new HeatmapData(List.of(), List.of(), new double[0][0]);
+        }
+        // Etykiety godzin (np. 8:00, 9:00..)
+        List<String> hours = new ArrayList<>();
+        for (int h = startHour; h < endHour; h++) {
+            hours.add(String.format("%02d:00", h));
+        }
+
+        // Kolejność dni PN..ND
+        List<DayOfWeek> dayOrder = List.of(
+                DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY,
+                DayOfWeek.FRIDAY, DayOfWeek.SATURDAY, DayOfWeek.SUNDAY
+        );
+        List<String> days = List.of("Pon", "Wt", "Śr", "Czw", "Pt", "Sob", "Nd");
+
+        double[][] usedSum = new double[7][hoursCount];
+        double[][] availSum = new double[7][hoursCount];
+
+        // Zbierz tylko rezerwacje przecinające okno [from,to]
+        var relevant = reservationRepository.findAll().stream()
+                .filter(r -> r.getStatus() != Reservation.ReservationStatus.CANCELLED)
+                .filter(r -> r.getStartTime().isBefore(to) && r.getEndTime().isAfter(from))
+                .toList();
+
+        long rooms = roomService.getAllRooms().size();
+
+        for (LocalDate d = from.toLocalDate(); !d.isAfter(to.toLocalDate()); d = d.plusDays(1)) {
+            int dayIdx = dayOrder.indexOf(d.getDayOfWeek());
+            if (dayIdx < 0) continue;
+
+            for (int i = 0; i < hoursCount; i++) {
+                int hour = startHour + i;
+                LocalDateTime slotStart = d.atTime(hour, 0);
+                LocalDateTime slotEnd = d.atTime(hour + 1, 0);
+
+                LocalDateTime s = max(slotStart, from);
+                LocalDateTime e = max(slotEnd, to);
+                if (!s.isBefore(e)) continue;
+
+                long slotMinutes = Duration.between(s, e).toMinutes();
+                double used = 0;
+
+                for (var r : relevant) {
+                    LocalDateTime rs = max(r.getStartTime(), s);
+                    LocalDateTime re = min(r.getEndTime(), e);
+                    if (rs.isBefore(re)) {
+                        used += java.time.Duration.between(rs, re).toMinutes();
+                    }
+                }
+                usedSum[dayIdx][i] += used;
+                availSum[dayIdx][i] += (double) rooms * slotMinutes;
+            }
+        }
+            double[][] values = new double[7][hoursCount];
+            for (int d = 0; d < 7; d++) {
+                for (int h = 0; h < hoursCount; h++) {
+                    values[d][h] = availSum[d][h] > 0 ? usedSum[d][h] / availSum[d][h] : 0.0;
+                }
+            }
+
+        return new HeatmapData(days, hours, values);
     }
 
     // Liczenie gdzie godzin jest 24/7 dni.

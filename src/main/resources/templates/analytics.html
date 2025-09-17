@@ -125,9 +125,36 @@
                 </div>
             </div>
         </div>
+        <div class="row g-3 mt-1">
+            <div class="col-12">
+                <div class="card p-3 metric-card">
+                    <div class="d-flex align-items-center">
+                        <h5 class="mb-0">Heatmapa obłożenia (godzina x dzień tygodnia)</h5>
+                        <span class="help-icon" data-bs-toggle="tooltip"
+                              title="Średni procent zajęcia sal dla każdej godziny i dnia tygodnia,
+                              w wybranym oknie i godzinach pracy. 0% = pusto, 100% = pełne obłożenie.">ⓘ</span>
+                    </div>
+                    <div class="mt-3">
+                        <canvas id="util-heatmap" height="320"></canvas>
+                    </div>
+                    <!-- JSON z danymi heatmapy -->
+                    <script id="heatmap-data" type="application/json" th:utext="${heatmapJson}"></script>
+                    <div class="hint mt-2"> Kolor skali: od jasnego (niskie wykorzystanie) do ciemnego (wysokie).
+                        Uwzględniono tylko godziny pracy: <b th:text="${startHour}"></b>:00–<b th:text="${endHour}"></b>:00.
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div> <!-- Bootstrap JS (bundle zawiera Popper) -->
 <th:block th:replace="~{fragments.html :: scripts}"></th:block>
+<!-- Chart.js + matrix plugin -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-chart-matrix@2.0.1/dist/chartjs-chart-matrix.min.js"></script>
+<!-- Skrypty dla analityki -->
+<script th:src="@{/js/analytics.js}"></script>
+<script th:src="@{/js/analytics-heatmap.js}"></script>
 
-<link rel="stylesheet" th:href="@{/css/analytics.css}"> <script th:src="@{/js/analytics.js}"></script> </body></body>
+<link rel="stylesheet" th:href="@{/css/analytics.css}">
+</body>
 </html>

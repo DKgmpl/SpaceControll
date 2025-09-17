@@ -1,5 +1,7 @@
 package pl.edu.wszib.dnogiec.spacecontroll.controllers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -17,7 +19,8 @@ import java.time.LocalTime;
 @RequiredArgsConstructor
 public class AnalyticsController {
     private final AnalyticsService analyticsService;
-
+    private final ObjectMapper objectMapper;
+    // Godziny pracy z properties
     @Value("${app.business-hours.start:8}")
     private int startHour;
 
@@ -32,10 +35,7 @@ public class AnalyticsController {
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             LocalDateTime to,
-            Model model) {
-
-//        int startHour = 8;
-//        int endHour = 18;
+            Model model) throws JsonProcessingException {
 
         LocalDate today = LocalDate.now();
         LocalTime workStart = LocalTime.of(startHour, 0);
@@ -52,17 +52,21 @@ public class AnalyticsController {
         var cancel = analyticsService.cancellationRate(f, t);
         var rightSizing = analyticsService.rightSizing(f, t);
         var peakOccupancy = analyticsService.peakOccupancy(f, t);
+        var heatmap = analyticsService.utilizationHeatmap(f, t, startHour, endHour);
 
         model.addAttribute("from", f);
         model.addAttribute("to", t);
+        model.addAttribute("startHour", startHour);
+        model.addAttribute("endHour", endHour);
         model.addAttribute("util", util);
         model.addAttribute("noshow", noshow);
         model.addAttribute("cancel", cancel);
         model.addAttribute("rightSizing", rightSizing);
         model.addAttribute("peakOccupancy", peakOccupancy);
-        model.addAttribute("startHour", startHour);
-        model.addAttribute("endHour", endHour);
 
+        String heatmapJson = objectMapper.writeValueAsString(heatmap);
+        System.out.println("Heatmap JSON length =  " + heatmapJson.length()); //debug
+        model.addAttribute("heatmapJson",heatmapJson);
 
         return "analytics";
     }

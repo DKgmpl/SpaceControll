@@ -17,3 +17,9 @@
 .metric-card .progress {
     height: 1rem;
 }
+
+/* Wysokość Heatmapy*/
+.metric-card canvas {
+    width: 100% !important;
+    min-height: 360px;
+}
