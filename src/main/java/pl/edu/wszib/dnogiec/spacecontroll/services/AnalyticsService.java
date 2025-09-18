@@ -56,7 +56,8 @@ public class AnalyticsService {
 
         // Zbierz tylko rezerwacje przecinające okno [from,to]
         var relevant = reservationRepository.findAll().stream()
-                .filter(r -> r.getStatus() != Reservation.ReservationStatus.CANCELLED)
+                .filter(r -> r.getStatus() != Reservation.ReservationStatus.CANCELLED
+                && r.getStatus() != Reservation.ReservationStatus.NO_SHOW_RELEASED)
                 .filter(r -> r.getStartTime().isBefore(to) && r.getEndTime().isAfter(from))
                 .toList();
 
@@ -103,7 +104,8 @@ public class AnalyticsService {
     /*public UtilizationResult utilization(LocalDateTime from, LocalDateTime to) {
         // 1) Rezerwacje, które przecinają okno [from,to]
         var intersecting = reservationRepository.findAll().stream()
-                .filter(r -> r.getStatus() != Reservation.ReservationStatus.CANCELLED)
+                .filter(r -> r.getStatus() != Reservation.ReservationStatus.CANCELLED
+                        && r.getStatus() != Reservation.ReservationStatus.NO_SHOW_RELEASED)
                 .filter(r -> r.getStartTime().isBefore(to) && r.getEndTime().isAfter(from))
                 .toList();
         // 2) Suma czasu przecięcia z oknem
@@ -127,7 +129,8 @@ public class AnalyticsService {
     public UtilizationResult utilizationBusinessHours(LocalDateTime from, LocalDateTime to, int startHour, int endHour) {
         validateHours(startHour, endHour);
         var intersecting = reservationRepository.findAll().stream()
-                .filter(r -> r.getStatus() != Reservation.ReservationStatus.CANCELLED)
+                .filter(r -> r.getStatus() != Reservation.ReservationStatus.CANCELLED
+                        && r.getStatus() != Reservation.ReservationStatus.NO_SHOW_RELEASED)
                 .filter(r -> r.getStartTime().isBefore(to) && r.getEndTime().isAfter(from))
                 .toList();
 
@@ -154,11 +157,31 @@ public class AnalyticsService {
 
     public RateResult cancellationRate(LocalDateTime from, LocalDateTime to) {
         var created = reservationRepository.findAll().stream()
-                .filter(r -> r.getCreatedAt() != null && !r.getCreatedAt().isBefore(from) && !r.getCreatedAt().isAfter(to))
+                .filter(r -> r.getCreatedAt() != null
+                        && !r.getCreatedAt().isBefore(from)
+                        && !r.getCreatedAt().isAfter(to))
                 .toList();
         long total = created.size();
-        long cancelled = created.stream().filter(r -> r.getStatus() == Reservation.ReservationStatus.CANCELLED).count();
-        return new RateResult(cancelled, total, total == 0 ? 0.0 : (double) cancelled / total);
+        long cancelled = created.stream()
+                .filter(r -> r.getStatus() == Reservation.ReservationStatus.CANCELLED
+                || r.getStatus() == Reservation.ReservationStatus.NO_SHOW_RELEASED)
+                .count();
+        double rate = total == 0 ? 0.0 : (double) cancelled / total;
+        return new RateResult(cancelled, total, rate);
+    }
+
+    public RateResult autoReleaseRate(LocalDateTime from, LocalDateTime to) {
+        var created = reservationRepository.findAll().stream()
+                .filter(r -> r.getCreatedAt() != null
+                        && !r.getCreatedAt().isBefore(from)
+                        && !r.getCreatedAt().isAfter(to))
+                .toList();
+        long total = created.size();
+        long autoReleased = created.stream()
+                .filter(r -> r.getStatus() == Reservation.ReservationStatus.NO_SHOW_RELEASED)
+                .count();
+        double rate = total == 0 ? 0.0 : (double) autoReleased / total;
+        return new RateResult(autoReleased, total, rate);
     }
 
     public RightSizingResult rightSizing(LocalDateTime from, LocalDateTime to) {
@@ -177,7 +200,8 @@ public class AnalyticsService {
         record P(LocalDateTime t, int d) {
         }
         var points = reservationRepository.findAll().stream()
-                .filter(r -> r.getStatus() != Reservation.ReservationStatus.CANCELLED)
+                .filter(r -> r.getStatus() != Reservation.ReservationStatus.CANCELLED
+                        && r.getStatus() != Reservation.ReservationStatus.NO_SHOW_RELEASED)
                 .map(r -> {
                     LocalDateTime s = r.getStartTime().isBefore(from) ? from : r.getStartTime();
                     LocalDateTime e = r.getEndTime().isAfter(to) ? to : r.getEndTime();

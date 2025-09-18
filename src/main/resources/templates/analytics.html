@@ -56,8 +56,8 @@
                     <h5 class="mb-0">No-show rate</h5>
                     <span class="help-icon" data-bs-toggle="tooltip"
                           title="Udział zakończonych rezerwacji bez potwierdzenia obecności (check-in) w wybranym oknie.">
-        ⓘ
-      </span>
+                    ⓘ
+                    </span>
                 </div>
                 <p class="mt-2 mb-1"
                    th:text="'No-show: ' + ${noshow.numerator} + ' z ' + ${noshow.denominator} + ' (' + ${#numbers.formatDecimal(noshow.rate*100,1,1)} + '%)'"></p>
@@ -75,12 +75,14 @@
                 <div class="d-flex align-items-center">
                     <h5 class="mb-0">Cancellation rate</h5>
                     <span class="help-icon" data-bs-toggle="tooltip"
-                          title="Udział anulowanych wśród rezerwacji utworzonych w wybranym oknie (wg createdAt).">
-        ⓘ
-      </span>
+                          title="Udział anulowanych (CANCELLED + auto-release no-show) wśród rezerwacji utworzonych w wybranym oknie (wg createdAt).">
+                        ⓘ
+                    </span>
                 </div>
                 <p class="mt-2 mb-1"
                    th:text="'Anulacje: ' + ${cancel.numerator} + ' z ' + ${cancel.denominator} + ' (' + ${#numbers.formatDecimal(cancel.rate*100,1,1)} + '%)'"></p>
+                <p class="mt-0 mb-1 text-muted"
+                   th:text="'w tym auto-release no-show: ' + ${autoRelease.numerator} + ' (' + ${#numbers.formatDecimal(autoRelease.rate*100,1,1)} + '%)'"></p>
                 <div class="hint">
                     Jak liczymy: status CANCELLED wśród rezerwacji utworzonych w [from,to].
                     Dlaczego ważne: wysoka liczba anulacji wskazuje na problemy z planowaniem i dostępnością.
@@ -95,8 +97,8 @@
                     <h5 class="mb-0">Dopasowanie pojemności (right-sizing)</h5>
                     <span class="help-icon" data-bs-toggle="tooltip"
                           title="Średnia różnica: pojemność sali minus liczba uczestników (tylko rezerwacje z check-in).">
-        ⓘ
-      </span>
+                    ⓘ
+                    </span>
                 </div>
                 <p class="mt-2 mb-1"
                    th:text="'Śr. nadmiar miejsc: ' + ${#numbers.formatDecimal(rightSizing.avgDifference, 1, 1)} + ' (N=' + ${rightSizing.sampleSize} + ')'"></p>

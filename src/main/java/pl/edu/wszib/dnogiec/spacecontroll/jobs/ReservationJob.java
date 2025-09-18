@@ -11,7 +11,7 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-public class ReservationJobs {
+public class ReservationJob {
     private final ReservationRepository reservationRepository;
 
     @Scheduled(fixedRate = 60_000)

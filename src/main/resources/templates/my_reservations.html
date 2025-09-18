@@ -21,7 +21,32 @@
             <td th:text="${res.conferenceRoom.name}"></td>
             <td th:text="${#temporals.format(res.startTime, 'yyyy-MM-dd HH:mm')}"></td>
             <td th:text="${#temporals.format(res.endTime, 'yyyy-MM-dd HH:mm')}"></td>
-            <td th:text="${res.status}"></td>
+            <td>
+                <!-- Odznaki statusów -->
+                <span th:switch="${res.status.name()}">
+                    <span th:case="'ACTIVE'" class="badge bg-success">Aktywna</span>
+                    <span th:case="'COMPLETED'" class="badge bg-secondary">Zakończona</span>
+                    <span th:case="'CANCELLED'" class="badge bg-warning text-dark">Anulowana</span>
+                    <!-- Badge dla auto-release + tooltip -->
+                    <span th:case="'NO_SHOW_RELEASED'"
+                          class="badge bg-danger"
+                          data-bs-toggle="tooltip"
+                          title="Automatyczne zwolnienie z powodu braku potwierdzenia obecności (no‑show)">
+                          Auto‑release (no‑show)</span>
+                    <!-- fallback -->
+                    <span th:case="*" class="badge bg-light text-dark" th:text="${res.status}"></span>
+                </span>
+                <!-- Drobne szczegóły pod statusem -->
+                <div class="small text-muted mt-1" th:if="${res.checkInTime != null}"
+                     th:text="'Check‑in: ' + ${#temporals.format(res.checkInTime, 'yyyy-MM-dd HH:mm')}"></div>
+                <div class="small text-muted mt-1"
+                     th:if="${res.status.name() == 'COMPLETED' and res.checkInTime == null}"> Zakończone bez check‑in
+                    (no‑show)
+                </div>
+                <div class="small text-muted mt-1"
+                     th:if="${res.status.name() == 'NO_SHOW_RELEASED' and res.cancelledAt != null}"
+                     th:text="'Zwolniono: ' + ${#temporals.format(res.cancelledAt, 'yyyy-MM-dd HH:mm')}"></div>
+            </td>
             <td th:text="${res.notes}"></td>
             <td>
                 <form th:action="@{'/reservations/cancel/' + ${res.id}}"

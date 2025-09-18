@@ -55,6 +55,7 @@ public class AnalyticsController {
         var util = analyticsService.utilizationBusinessHours(f, t, startHour, endHour);
         var noshow = analyticsService.noShowRate(f, t);
         var cancel = analyticsService.cancellationRate(f, t);
+        var autoRelease = analyticsService.autoReleaseRate(f, t);
         var rightSizing = analyticsService.rightSizing(f, t);
         var peakOccupancy = analyticsService.peakOccupancy(f, t);
         var heatmap = analyticsService.utilizationHeatmap(f, t, startHour, endHour);
@@ -66,6 +67,7 @@ public class AnalyticsController {
         model.addAttribute("util", util);
         model.addAttribute("noshow", noshow);
         model.addAttribute("cancel", cancel);
+        model.addAttribute("autoRelease", autoRelease);
         model.addAttribute("rightSizing", rightSizing);
         model.addAttribute("peakOccupancy", peakOccupancy);
 
@@ -95,6 +97,7 @@ public class AnalyticsController {
         var util = analyticsService.utilizationBusinessHours(f, t, startHour, endHour);
         var noshow = analyticsService.noShowRate(f, t);
         var cancel = analyticsService.cancellationRate(f, t);
+        var autoRelease = analyticsService.autoReleaseRate(f, t);
         var rightSizing = analyticsService.rightSizing(f, t);
         var peak = analyticsService.peakOccupancy(f, t);
 
@@ -102,7 +105,14 @@ public class AnalyticsController {
 
         // CSV z separatorem średnikowym (lepsze pod PL Excel)
         StringBuilder sb = new StringBuilder();
-        sb.append("from;to;businessHours;usedMinutes;availableMinutes;utilization%;noShowCount;noShowTotal;noShow%;cancelCount;cancelTotal;cancel%;avgRightSizing;rightSizingSample;peak;peakAt\n");
+        // Nagłówek
+        sb.append("from;to;businessHours;usedMinutes;availableMinutes;utilization%;");
+        sb.append("noShowCount;noShowTotal;noShow%;");
+        sb.append("cancelCount;cancelTotal;cancel%;");
+        sb.append("autoReleaseCount;autoRelease%;");
+        sb.append("avgRightSizing;rightSizingSample;peak;peakAt\n");
+
+        //Wiersz
         sb.append(fmt.format(f)).append(';')
                 .append(fmt.format(t)).append(';')
                 .append(startHour).append(":00-").append(endHour).append(":00").append(';')
@@ -115,6 +125,8 @@ public class AnalyticsController {
                 .append(cancel.numerator()).append(';')
                 .append(cancel.denominator()).append(';')
                 .append(String.format(java.util.Locale.US, "%.1f", cancel.rate()*100)).append(';')
+                .append(autoRelease.numerator()).append(';')
+                .append(String.format(java.util.Locale.US, "%.1f", autoRelease.rate()*100)).append(';')
                 .append(String.format(java.util.Locale.US, "%.1f", rightSizing.avgDifference())).append(';')
                 .append(rightSizing.sampleSize()).append(';')
                 .append(peak.peak()).append(';')

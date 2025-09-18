@@ -64,6 +64,7 @@ public class Reservation {
     public enum ReservationStatus {
         ACTIVE,
         CANCELLED,
-        COMPLETED
+        COMPLETED,
+        NO_SHOW_RELEASED    // auto-zwolnienie bez check-in
     }
 }

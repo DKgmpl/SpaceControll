@@ -14,8 +14,10 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     List<Reservation> findByUserId(Long userId);
     List<Reservation> findByStartTimeBetween(LocalDateTime from, LocalDateTime to);
     List<Reservation> findByEndTimeBetween(LocalDateTime from, LocalDateTime to);
-    List<Reservation> findByStatusAndEndTimeBefore(Reservation.ReservationStatus status, LocalDateTime to);
     List<Reservation> findByConferenceRoomIdAndStatusAndEndTimeAfterAndStartTimeBefore(
             Long roomId, Reservation.ReservationStatus status, LocalDateTime from, LocalDateTime to);
     List<Reservation> findByStatus(Reservation.ReservationStatus status);
+    List<Reservation> findByStatusAndEndTimeBefore(Reservation.ReservationStatus status, LocalDateTime to);
+    List<Reservation> findByStatusAndStartTimeBeforeAndCheckInTimeIsNull(
+            Reservation.ReservationStatus status, LocalDateTime threshold);
 }
