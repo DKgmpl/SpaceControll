@@ -11,6 +11,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.beans.factory.annotation.Value;
 import pl.edu.wszib.dnogiec.spacecontroll.dao.impl.spring.data.UserRepository;
 import pl.edu.wszib.dnogiec.spacecontroll.model.ConferenceRoom;
 import pl.edu.wszib.dnogiec.spacecontroll.model.Reservation;
@@ -18,11 +19,15 @@ import pl.edu.wszib.dnogiec.spacecontroll.model.User;
 import pl.edu.wszib.dnogiec.spacecontroll.services.IConferenceRoomService;
 import pl.edu.wszib.dnogiec.spacecontroll.services.IReservationService;
 import pl.edu.wszib.dnogiec.spacecontroll.validation.ValidationGroups;
+import pl.edu.wszib.dnogiec.spacecontroll.services.IcsService;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.time.ZoneId;
+
 
 @Controller
 @RequiredArgsConstructor
@@ -30,6 +35,10 @@ public class ReservationController {
     private final IReservationService reservationService;
     private final IConferenceRoomService conferenceRoomService;
     private final UserRepository userRepository;
+    private final IcsService icsService;
+
+    @Value("${app.ics.timezone:Europe/Warsaw}")
+    private String icsTimezone;
 
     @GetMapping("/reservations/create/{roomId}")
     public String showReservationForm(@PathVariable Long roomId,
@@ -148,6 +157,50 @@ public class ReservationController {
         User user = getCurrentUser();
         reservationService.checkIn(reservationId, user.getId());
         return "redirect:/reservations/my";
+    }
+
+    @GetMapping("/reservations/{id}/ics")
+    public ResponseEntity<byte[]> reservationIcs(@PathVariable Long id) {
+        Reservation r = reservationService.getReservationById(id);
+        if (r == null) {
+            return ResponseEntity.notFound().build();
+        }
+        //uprawnienia: OWNER lub ADMIN
+        User current = getCurrentUser();
+        boolean isOwner = r.getUser() != null && r.getId().equals(current.getId());
+        boolean isAdmin = current.getRole() == User.Role.ADMIN;
+        if (!isOwner && !isAdmin) {
+            return ResponseEntity.status(403).build();
+        }
+        ZoneId tz = ZoneId.of(icsTimezone);
+        byte[] body = icsService.generateReservationIcs(r, tz);
+        String filename = "reservation-" + id + ".ics";
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .contentType(new MediaType("text", "calendar", StandardCharsets.UTF_8))
+                .body(body);
+    }
+
+    @GetMapping("/reservations/my.ics")
+    public ResponseEntity<byte[]> myCalendarIcs() {
+        User current = getCurrentUser();
+        var all = reservationService.getReservationsForUser(current.getId());
+        var now = LocalDateTime.now();
+
+        var subset = all.stream()
+                .filter(r -> r.getStatus() != Reservation.ReservationStatus.CANCELLED
+                        && r.getStatus() != Reservation.ReservationStatus.NO_SHOW_RELEASED)
+                .filter(r -> r.getEndTime() != null && !r.getEndTime().isBefore(now.minusDays(30)))
+                .collect(Collectors.toList());
+
+        ZoneId tz = ZoneId.of(icsTimezone);
+        byte[] body = icsService.generateUserCalendar("-//SpaceControll User Calendar//EN", subset, tz);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=my-reservation.ics")
+                .contentType(new MediaType("text", "calendar", StandardCharsets.UTF_8))
+                .body(body);
     }
 
     //Metoda pomocnicza do pobrania aktualnie zautoryzowanego użytkownika

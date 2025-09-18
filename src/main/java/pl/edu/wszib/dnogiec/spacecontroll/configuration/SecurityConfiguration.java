@@ -56,7 +56,7 @@ public class SecurityConfiguration {
         http
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers("/", "/login", "/register", "/css/", "/js/").permitAll()
-                .requestMatchers("/h2-console/**").permitAll()  //Info: Opcja DEV
+                .requestMatchers("/h2-console/**").permitAll()  // Opcja DEV
                 .requestMatchers("/rooms/add", "/rooms/edit/", "/rooms/delete/", "/analytics",
                         "/analytics/export", "/reservations/export", "/exports").hasAuthority("ADMIN")
                 .requestMatchers("/rooms/", "/reservations/**", "/reservation_create").authenticated()
@@ -77,7 +77,7 @@ public class SecurityConfiguration {
                 .clearAuthentication(true)
                 .permitAll()
             )
-                //Info: Opcja DEV
+                // Opcja DEV
             .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin));
 
         return http.build();

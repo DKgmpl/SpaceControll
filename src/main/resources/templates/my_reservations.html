@@ -5,6 +5,9 @@
 <div th:replace="~{fragments.html :: menu}"></div>
 <div class="container mt-4">
     <h2>Moje rezerwacje</h2>
+    <div class="d-flex justify-content-end mb-2">
+        <a class="btn btn-secondary btn-sm" th:href="@{/reservations/my.ics}"> Pobierz mój kalendarz (ICS) </a>
+    </div>
     <table class="table table-striped">
         <thead>
         <tr>
@@ -63,6 +66,8 @@
                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                     <button type="submit" class="btn btn-success btn-sm mt-1">Potwierdź obecność</button>
                 </form>
+                <a th:href="@{'/reservations/' + ${res.id} + '/ics'}"
+                   class="btn btn-outline-secondary btn-sm mt-1">ICS</a>
             </td>
         </tr>
         </tbody>
