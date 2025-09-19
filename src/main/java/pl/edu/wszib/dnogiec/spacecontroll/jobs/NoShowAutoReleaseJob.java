@@ -31,7 +31,7 @@ public class NoShowAutoReleaseJob {
             LocalDateTime now = LocalDateTime.now();
             for (Reservation r : candidates) {
                 r.setStatus(Reservation.ReservationStatus.NO_SHOW_RELEASED);
-                r.setCheckInTime(now);
+                r.setCancelledAt(now);
                 reservationRepository.save(r);
             }
             System.out.println("[AutoRelease] Released " + candidates.size() + " reservations as NO_SHOW_RELEASED (grace=" + graceMinutes + "m)");

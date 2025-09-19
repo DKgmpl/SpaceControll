@@ -73,7 +73,7 @@ public class AnalyticsService {
                 LocalDateTime slotEnd = d.atTime(hour + 1, 0);
 
                 LocalDateTime s = max(slotStart, from);
-                LocalDateTime e = max(slotEnd, to);
+                LocalDateTime e = min(slotEnd, to);
                 if (!s.isBefore(e)) continue;
 
                 long slotMinutes = Duration.between(s, e).toMinutes();
