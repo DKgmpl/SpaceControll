@@ -36,6 +36,8 @@ public class AnalyticsService {
     public record LeadTimeResult(double avgHours, long sampleSize) {
     }
 
+    // ======================== Utilization (business hours) ========================
+
     // Liczenie gdzie godzin jest 24/7 dni.
     /*public UtilizationResult utilization(LocalDateTime from, LocalDateTime to) {
         // 1) Rezerwacje, które przecinają okno [from,to]
@@ -60,11 +62,17 @@ public class AnalyticsService {
         double util = available == 0 ? 0.0 : (double) used / available;
         return new UtilizationResult(used, available, util);
     }*/
+    // Kompatybilność wsteczna (excludeWeekends=false domyślnie)
+    public UtilizationResult utilizationBusinessHours(LocalDateTime from, LocalDateTime to, int startHour, int endHour) {
+        return utilizationBusinessHours(from, to, startHour, endHour, false);
+    }
 
     // Liczenie w godzinach pracy (8-18) (zarówno used, jak i available)
-    public UtilizationResult utilizationBusinessHours(LocalDateTime from, LocalDateTime to, int startHour, int endHour,
+    public UtilizationResult utilizationBusinessHours(LocalDateTime from, LocalDateTime to,
+                                                      int startHour, int endHour,
                                                       boolean excludeWeekends) {
         validateHours(startHour, endHour);
+
         var intersecting = reservationRepository.findAll().stream()
                 .filter(r -> r.getStatus() != Reservation.ReservationStatus.CANCELLED
                         && r.getStatus() != Reservation.ReservationStatus.NO_SHOW_RELEASED)
@@ -73,8 +81,8 @@ public class AnalyticsService {
 
         long usedBusiness = 0;
         for (var r : intersecting) {
-            usedBusiness += overlapWithBusinessWindows(r.getStartTime(), r.getEndTime(), from, to, startHour, endHour,
-                    excludeWeekends);
+            usedBusiness += overlapWithBusinessWindows(r.getStartTime(), r.getEndTime(),
+                    from, to, startHour, endHour, excludeWeekends);
         }
 
         long rooms = roomService.getAllRooms().size();
@@ -83,27 +91,29 @@ public class AnalyticsService {
         return new UtilizationResult(usedBusiness, available, util);
     }
 
-    public HeatmapData utilizationHeatmap(LocalDateTime from, LocalDateTime to, int startHour, int endHour,
-                                          boolean excludeWeekends) {
-        return utilizationHeatmapInternal(from, to, startHour, endHour, excludeWeekends);
-    }
-
-    // Backward-compatible overloads (excludeWeekends=false by default)
-    public UtilizationResult utilizationBusinessHours(LocalDateTime from, LocalDateTime to, int startHour, int endHour) {
-        return utilizationBusinessHours(from, to, startHour, endHour, false);
-    }
+    // ======================== Heatmap (day x hour) ========================
 
     public HeatmapData utilizationHeatmap(LocalDateTime from, LocalDateTime to, int startHour, int endHour) {
         return utilizationHeatmapInternal(from, to, startHour, endHour, false);
     }
 
-    // Internal implementation to avoid code duplication
-    private HeatmapData utilizationHeatmapInternal(LocalDateTime from, LocalDateTime to, int startHour, int endHour,
+    public HeatmapData utilizationHeatmap(LocalDateTime from, LocalDateTime to,
+                                          int startHour, int endHour,
                                           boolean excludeWeekends) {
+        return utilizationHeatmapInternal(from, to, startHour, endHour, excludeWeekends);
+    }
+
+    // Implementacja Heatmap
+    private HeatmapData utilizationHeatmapInternal(LocalDateTime from, LocalDateTime to,
+                                                   int startHour, int endHour,
+                                                   boolean excludeWeekends) {
+        validateHours(startHour, endHour);
+
         int hoursCount = Math.max(0, endHour - startHour);
         if (hoursCount == 0) {
             return new HeatmapData(List.of(), List.of(), new double[0][0]);
         }
+
         // Etykiety godzin (np. 8:00, 9:00..)
         List<String> hours = new ArrayList<>();
         for (int h = startHour; h < endHour; h++) {
@@ -152,9 +162,10 @@ public class AnalyticsService {
                     LocalDateTime rs = max(r.getStartTime(), s);
                     LocalDateTime re = min(r.getEndTime(), e);
                     if (rs.isBefore(re)) {
-                        used += java.time.Duration.between(rs, re).toMinutes();
+                        used += Duration.between(rs, re).toMinutes();
                     }
                 }
+
                 usedSum[dayIdx][i] += used;
                 availSum[dayIdx][i] += (double) rooms * slotMinutes;
             }
@@ -169,6 +180,12 @@ public class AnalyticsService {
         return new HeatmapData(days, hours, values);
     }
 
+    // ======================== No-show, Cancel, Auto-release ========================
+
+    public RateResult noShowRate(LocalDateTime from, LocalDateTime to) {
+        return noShowRate(from, to, false);
+    }
+
     public RateResult noShowRate(LocalDateTime from, LocalDateTime to, boolean excludeWeekends) {
         var ended = reservationRepository.findAll().stream()
                 .filter(r -> r.getEndTime() != null)
@@ -181,11 +198,11 @@ public class AnalyticsService {
         return new RateResult(noshow, total, total == 0 ? 0.0 : (double) noshow / total);
     }
 
-    public RateResult noShowRate(LocalDateTime from, LocalDateTime to) {
-        return noShowRate(from, to, false);
+    public RateResult cancellationRate(LocalDateTime from, LocalDateTime to) {
+        return cancellationRate(from, to, false);
     }
 
-    public RateResult cancellationRate(LocalDateTime from, LocalDateTime to,  boolean excludeWeekends) {
+    public RateResult cancellationRate(LocalDateTime from, LocalDateTime to, boolean excludeWeekends) {
         var created = reservationRepository.findAll().stream()
                 .filter(r -> r.getCreatedAt() != null)
                 .filter(r -> !r.getCreatedAt().isBefore(from) && !r.getCreatedAt().isAfter(to))
@@ -193,15 +210,15 @@ public class AnalyticsService {
                 .toList();
         long total = created.size();
         long cancelled = created.stream().filter(r ->
-                        r.getStatus() == Reservation.ReservationStatus.CANCELLED
+                r.getStatus() == Reservation.ReservationStatus.CANCELLED
                         || r.getStatus() == Reservation.ReservationStatus.NO_SHOW_RELEASED
-                ).count();
+        ).count();
         double rate = total == 0 ? 0.0 : (double) cancelled / total;
         return new RateResult(cancelled, total, rate);
     }
 
-    public RateResult cancellationRate(LocalDateTime from, LocalDateTime to) {
-        return cancellationRate(from, to, false);
+    public RateResult autoReleaseRate(LocalDateTime from, LocalDateTime to) {
+        return autoReleaseRate(from, to, false);
     }
 
     public RateResult autoReleaseRate(LocalDateTime from, LocalDateTime to, boolean excludeWeekends) {
@@ -218,8 +235,10 @@ public class AnalyticsService {
         return new RateResult(autoReleased, total, rate);
     }
 
-    public RateResult autoReleaseRate(LocalDateTime from, LocalDateTime to) {
-        return autoReleaseRate(from, to, false);
+    // ======================== Right-sizing ========================
+
+    public RightSizingResult rightSizing(LocalDateTime from, LocalDateTime to) {
+        return rightSizing(from, to, false);
     }
 
     public RightSizingResult rightSizing(LocalDateTime from, LocalDateTime to, boolean excludeWeekends) {
@@ -232,20 +251,25 @@ public class AnalyticsService {
                 .toList();
         long n = attended.size();
         double avgDiff = n == 0 ? 0.0 :
-                attended.stream().mapToInt(r -> r.getConferenceRoom().getCapacity() - r.getExpectedAttendees()).average().orElse(0.0);
+                attended.stream()
+                        .mapToInt(r -> r.getConferenceRoom().getCapacity() - r.getExpectedAttendees())
+                        .average().orElse(0.0);
         return new RightSizingResult(avgDiff, n);
     }
 
-    public RightSizingResult rightSizing(LocalDateTime from, LocalDateTime to) {
-        return rightSizing(from, to, false);
+    // ======================== Peak occupancy ========================
+
+    public PeakOccupancyResult peakOccupancy(LocalDateTime from, LocalDateTime to) {
+        return peakOccupancy(from, to, false);
     }
 
     public PeakOccupancyResult peakOccupancy(LocalDateTime from, LocalDateTime to, boolean excludeWeekends) {
-        record P(LocalDateTime t, int d) {}
+        record P(LocalDateTime t, int d) {
+        }
+
         var points = reservationRepository.findAll().stream()
                 .filter(r -> r.getStatus() != Reservation.ReservationStatus.CANCELLED
                         && r.getStatus() != Reservation.ReservationStatus.NO_SHOW_RELEASED)
-                // consider reservations that intersect the window [from, to]
                 .filter(r -> r.getStartTime().isBefore(to) && r.getEndTime().isAfter(from))
                 .flatMap(r -> {
                     LocalDateTime s = r.getStartTime().isBefore(from) ? from : r.getStartTime();
@@ -257,6 +281,7 @@ public class AnalyticsService {
                 })
                 .sorted((a, b) -> a.t().compareTo(b.t()))
                 .toList();
+
         int cur = 0, peak = 0;
         LocalDateTime at = from;
         for (var p : points) {
@@ -269,11 +294,31 @@ public class AnalyticsService {
         return new PeakOccupancyResult(peak, at);
     }
 
-    public PeakOccupancyResult peakOccupancy(LocalDateTime from, LocalDateTime to) {
-        return peakOccupancy(from, to, false);
+    // ======================== Lead time to book ========================
+
+    public LeadTimeResult leadTime(LocalDateTime from, LocalDateTime to) {
+        return leadTime(from, to, false);
     }
 
-    private static long businessMinutes(LocalDateTime from, LocalDateTime to, int startHour, int endHour,
+    // Lead time (średnia liczba godzin od utworzenia do startu – w oknie wg startTime)
+    public LeadTimeResult leadTime(LocalDateTime from, LocalDateTime to, boolean excludeWeekends) {
+        var list = reservationRepository.findAll().stream()
+                .filter(r -> r.getCreatedAt() != null && r.getStartTime() != null)
+                .filter(r -> !r.getStartTime().isBefore(from) && !r.getStartTime().isAfter(to))
+                .filter(r -> !excludeWeekends || !isWeekend(r.getStartTime()))
+                .toList();
+        long n = list.size();
+        double avgHours = n == 0 ? 0.0 :
+                list.stream()
+                        .mapToDouble(r -> java.time.Duration.between(r.getCreatedAt(), r.getStartTime()).toMinutes() / 60.0)
+                        .average().orElse(0.0);
+        return new LeadTimeResult(avgHours, n);
+    }
+
+    // ======================== Helpers ========================
+
+    private static long businessMinutes(LocalDateTime from, LocalDateTime to,
+                                        int startHour, int endHour,
                                         boolean excludeWeekends) {
         long total = 0;
         for (var d = from.toLocalDate(); !d.isAfter(to.toLocalDate()); d = d.plusDays(1)) {
@@ -285,23 +330,17 @@ public class AnalyticsService {
             var s = max(dayStart, from);
             var e = min(dayEnd, to);
             if (s.isBefore(e)) {
-                total += java.time.Duration.between(s, e).toMinutes();
+                total += Duration.between(s, e).toMinutes();
             }
         }
         return Math.max(0, total);
     }
 
-    private static void validateHours(int start, int end) {
-        if (start < 0 || start >= 24 || end <= start || end > 24)
-            throw new IllegalArgumentException("Nieprawidłowe godziny pracy: " + start + "-" + end);
-    }
-
-
     private static long overlapWithBusinessWindows(LocalDateTime rs, LocalDateTime re,
                                                    LocalDateTime from, LocalDateTime to,
-                                                   int startHour, int endHour, boolean excludeWeekends) {
+                                                   int startHour, int endHour,
+                                                   boolean excludeWeekends) {
         long total = 0;
-        // iteruj po dniach w oknie [from,to]
         for (var d = from.toLocalDate(); !d.isAfter(to.toLocalDate()); d = d.plusDays(1)) {
             if (excludeWeekends && (d.getDayOfWeek() == DayOfWeek.SATURDAY || d.getDayOfWeek() == DayOfWeek.SUNDAY)) {
                 continue;
@@ -318,29 +357,16 @@ public class AnalyticsService {
         return Math.max(0, total);
     }
 
-    // Lead time (średnia liczba godzin od utworzenia do startu – w oknie wg startTime)
-    // Lead time (średnia liczba godzin od utworzenia do startu – w oknie wg startTime)
-    public LeadTimeResult leadTime(LocalDateTime from, LocalDateTime to, boolean excludeWeekends) {
-        var list = reservationRepository.findAll().stream()
-                .filter(r -> r.getCreatedAt() != null && r.getStartTime() != null)
-                .filter(r -> !r.getStartTime().isBefore(from) && !r.getStartTime().isAfter(to))
-                .filter(r -> !excludeWeekends || !isWeekend(r.getStartTime()))
-                .toList();
-        long n = list.size();
-        double avgHours = n == 0 ? 0.0 :
-                list.stream().mapToDouble(r -> java.time.Duration.between(r.getCreatedAt(), r.getStartTime()).toMinutes() / 60.0)
-                        .average().orElse(0.0);
-        return new LeadTimeResult(avgHours, n);
-    }
-
-    public LeadTimeResult leadTime(LocalDateTime from, LocalDateTime to) {
-        return leadTime(from, to, false);
-    }
-
     private static boolean isWeekend(LocalDateTime dt) {
         var dow = dt.getDayOfWeek();
         return dow == DayOfWeek.SATURDAY || dow == DayOfWeek.SUNDAY;
     }
+
+    private static void validateHours(int start, int end) {
+        if (start < 0 || start >= 24 || end <= start || end > 24)
+            throw new IllegalArgumentException("Nieprawidłowe godziny pracy: " + start + "-" + end);
+    }
+
 
     private static LocalDateTime max(LocalDateTime a, LocalDateTime b) {
         return a.isAfter(b) ? a : b;
