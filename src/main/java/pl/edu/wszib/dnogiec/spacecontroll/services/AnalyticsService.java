@@ -120,7 +120,7 @@ public class AnalyticsService {
         double[][] usedSum = new double[7][hoursCount];
         double[][] availSum = new double[7][hoursCount];
 
-        // Zbierz tylko rezerwacje przecinające okno [from,to]
+        // Zbierz tylko rezerwacje przecinające okno [from, to]
         var relevant = reservationRepository.findAll().stream()
                 .filter(r -> r.getStatus() != Reservation.ReservationStatus.CANCELLED
                         && r.getStatus() != Reservation.ReservationStatus.NO_SHOW_RELEASED)
@@ -308,7 +308,7 @@ public class AnalyticsService {
             }
             var dayStart = d.atTime(startHour, 0);
             var dayEnd = d.atTime(endHour, 0);
-            // przecięcie trzech odcinków: rezerwacji [rs,re], okna globalnego [from,to] i okna dnia [dayStart,dayEnd]
+            // przecięcie trzech odcinków: rezerwacji [rs, re], okna globalnego [from, to] i okna dnia [dayStart, dayEnd]
             var s = max(max(rs, from), dayStart);
             var e = min(min(re, to), dayEnd);
             if (s.isBefore(e)) {

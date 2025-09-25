@@ -5,9 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.context.annotation.Bean;
 import org.springframework.test.util.ReflectionTestUtils;
 import pl.edu.wszib.dnogiec.spacecontroll.dao.impl.spring.data.ReservationRepository;
 import pl.edu.wszib.dnogiec.spacecontroll.model.ConferenceRoom;
@@ -15,7 +13,9 @@ import pl.edu.wszib.dnogiec.spacecontroll.model.Reservation;
 import pl.edu.wszib.dnogiec.spacecontroll.model.User;
 import pl.edu.wszib.dnogiec.spacecontroll.services.impl.ReservationService;
 
-import java.time.*;
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 

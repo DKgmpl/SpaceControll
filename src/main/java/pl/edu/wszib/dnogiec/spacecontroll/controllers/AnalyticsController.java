@@ -90,7 +90,7 @@ public class AnalyticsController {
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to
-    ) throws JsonProcessingException {
+    ) {
         LocalDate today = LocalDate.now();
         LocalTime workStart = LocalTime.of(startHour, 0);
         LocalTime workEnd = LocalTime.of(endHour, 0);

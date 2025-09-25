@@ -78,15 +78,6 @@ class IcsControllerStandaloneTest {
         return r;
     }
 
-    private User adminUser() {
-        var u = new User();
-        u.setId(999L);
-        u.setLogin("admin");
-        u.setRole(User.Role.ADMIN);
-        u.setEmail("admin@example.com");
-        return u;
-    }
-
     private User user(long id, String login, User.Role role) {
         var u = new User();
         u.setId(id);
