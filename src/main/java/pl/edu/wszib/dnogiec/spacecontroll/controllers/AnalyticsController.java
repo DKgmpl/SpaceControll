@@ -5,16 +5,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import java.nio.charset.StandardCharsets;
 import pl.edu.wszib.dnogiec.spacecontroll.services.AnalyticsService;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -31,6 +31,9 @@ public class AnalyticsController {
 
     @Value("${app.business-hours.end:18}")
     private int endHour;
+
+    @Value("${app.analytics.exclude-weekends:true}")
+    private boolean excludeWeekends;
 
     @GetMapping("/analytics")
     public String analytics(
@@ -52,28 +55,31 @@ public class AnalyticsController {
         LocalDateTime f = (from != null ? from : defFrom).withSecond(0).withNano(0);
         LocalDateTime t = (to != null ? to : defTo).withSecond(0).withNano(0);
 
-        var util = analyticsService.utilizationBusinessHours(f, t, startHour, endHour);
-        var noshow = analyticsService.noShowRate(f, t);
-        var cancel = analyticsService.cancellationRate(f, t);
-        var autoRelease = analyticsService.autoReleaseRate(f, t);
-        var rightSizing = analyticsService.rightSizing(f, t);
-        var peakOccupancy = analyticsService.peakOccupancy(f, t);
-        var heatmap = analyticsService.utilizationHeatmap(f, t, startHour, endHour);
+        var util = analyticsService.utilizationBusinessHours(f, t, startHour, endHour, excludeWeekends);
+        var noshow = analyticsService.noShowRate(f, t, excludeWeekends);
+        var cancel = analyticsService.cancellationRate(f, t, excludeWeekends);
+        var autoRelease = analyticsService.autoReleaseRate(f, t, excludeWeekends);
+        var rightSizing = analyticsService.rightSizing(f, t, excludeWeekends);
+        var peakOccupancy = analyticsService.peakOccupancy(f, t, excludeWeekends);
+        var leadTime = analyticsService.leadTime(f, t, excludeWeekends);
+        var heatmap = analyticsService.utilizationHeatmap(f, t, startHour, endHour, excludeWeekends);
 
         model.addAttribute("from", f);
         model.addAttribute("to", t);
         model.addAttribute("startHour", startHour);
         model.addAttribute("endHour", endHour);
+        model.addAttribute("excludeWeekends", excludeWeekends);
         model.addAttribute("util", util);
         model.addAttribute("noshow", noshow);
         model.addAttribute("cancel", cancel);
         model.addAttribute("autoRelease", autoRelease);
         model.addAttribute("rightSizing", rightSizing);
         model.addAttribute("peakOccupancy", peakOccupancy);
+        model.addAttribute("leadTime", leadTime);
 
         String heatmapJson = objectMapper.writeValueAsString(heatmap);
         System.out.println("Heatmap JSON length =  " + heatmapJson.length()); //debug
-        model.addAttribute("heatmapJson",heatmapJson);
+        model.addAttribute("heatmapJson", heatmapJson);
 
         return "analytics";
     }
@@ -94,46 +100,57 @@ public class AnalyticsController {
         LocalDateTime f = (from != null ? from : defFrom).withSecond(0).withNano(0);
         LocalDateTime t = (to != null ? to : defTo).withSecond(0).withNano(0);
 
-        var util = analyticsService.utilizationBusinessHours(f, t, startHour, endHour);
-        var noshow = analyticsService.noShowRate(f, t);
-        var cancel = analyticsService.cancellationRate(f, t);
-        var autoRelease = analyticsService.autoReleaseRate(f, t);
-        var rightSizing = analyticsService.rightSizing(f, t);
-        var peak = analyticsService.peakOccupancy(f, t);
+        var util = analyticsService.utilizationBusinessHours(f, t, startHour, endHour, excludeWeekends);
+        var noshow = analyticsService.noShowRate(f, t, excludeWeekends);
+        var cancel = analyticsService.cancellationRate(f, t, excludeWeekends);
+        var autoRelease = analyticsService.autoReleaseRate(f, t, excludeWeekends);
+        var rightSizing = analyticsService.rightSizing(f, t, excludeWeekends);
+        var peak = analyticsService.peakOccupancy(f, t, excludeWeekends);
+        var lead = analyticsService.leadTime(f, t, excludeWeekends);
+        double leadAvg = (lead != null ? lead.avgHours() : 0.0);
+        long leadN = (lead != null ? lead.sampleSize() : 0);
 
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
         // CSV z separatorem średnikowym (lepsze pod PL Excel)
         StringBuilder sb = new StringBuilder();
         // Nagłówek
-        sb.append("from;to;businessHours;usedMinutes;availableMinutes;utilization%;");
+        sb.append("from;to;businessHours;");
+        sb.append("weekendsExcluded;")
+                .append(excludeWeekends ? "true" : "false")
+                .append('\n');
+        sb.append("usedMinutes;availableMinutes;utilization%;");
         sb.append("noShowCount;noShowTotal;noShow%;");
         sb.append("cancelCount;cancelTotal;cancel%;");
         sb.append("autoReleaseCount;autoRelease%;");
+        sb.append("leadTimeAvgHours;leadTimeSample;");
         sb.append("avgRightSizing;rightSizingSample;peak;peakAt\n");
 
         //Wiersz
         sb.append(fmt.format(f)).append(';')
                 .append(fmt.format(t)).append(';')
                 .append(startHour).append(":00-").append(endHour).append(":00").append(';')
+                .append(excludeWeekends ? "true" : "false").append(';')
                 .append(util.usedMinutes()).append(';')
                 .append(util.availableMinutes()).append(';')
-                .append(String.format(java.util.Locale.US, "%.1f", util.utilization()*100)).append(';')
+                .append(String.format(java.util.Locale.US, "%.1f", util.utilization() * 100)).append(';')
                 .append(noshow.numerator()).append(';')
                 .append(noshow.denominator()).append(';')
-                .append(String.format(java.util.Locale.US, "%.1f", noshow.rate()*100)).append(';')
+                .append(String.format(java.util.Locale.US, "%.1f", noshow.rate() * 100)).append(';')
                 .append(cancel.numerator()).append(';')
                 .append(cancel.denominator()).append(';')
-                .append(String.format(java.util.Locale.US, "%.1f", cancel.rate()*100)).append(';')
+                .append(String.format(java.util.Locale.US, "%.1f", cancel.rate() * 100)).append(';')
                 .append(autoRelease.numerator()).append(';')
-                .append(String.format(java.util.Locale.US, "%.1f", autoRelease.rate()*100)).append(';')
+                .append(String.format(java.util.Locale.US, "%.1f", autoRelease.rate() * 100)).append(';')
+                .append(String.format(java.util.Locale.US, "%.1f", leadAvg)).append(';')
+                .append(leadN).append(';')
                 .append(String.format(java.util.Locale.US, "%.1f", rightSizing.avgDifference())).append(';')
                 .append(rightSizing.sampleSize()).append(';')
                 .append(peak.peak()).append(';')
                 .append(peak.at() != null ? fmt.format(peak.at()) : "").append('\n');
 
         // BOM dla Excela w Windows
-        byte[] bom = new byte[] {(byte)0xEF,(byte)0xBB,(byte)0xBF};
+        byte[] bom = new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
         byte[] body = (new String(bom, StandardCharsets.UTF_8) + sb).getBytes(StandardCharsets.UTF_8);
 
         return ResponseEntity.ok()

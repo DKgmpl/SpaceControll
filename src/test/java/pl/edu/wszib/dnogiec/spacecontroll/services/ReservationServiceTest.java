@@ -1,21 +1,26 @@
 package pl.edu.wszib.dnogiec.spacecontroll.services;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.annotation.Bean;
+import org.springframework.test.util.ReflectionTestUtils;
 import pl.edu.wszib.dnogiec.spacecontroll.dao.impl.spring.data.ReservationRepository;
 import pl.edu.wszib.dnogiec.spacecontroll.model.ConferenceRoom;
 import pl.edu.wszib.dnogiec.spacecontroll.model.Reservation;
 import pl.edu.wszib.dnogiec.spacecontroll.model.User;
 import pl.edu.wszib.dnogiec.spacecontroll.services.impl.ReservationService;
 
-import java.time.LocalDateTime;
+import java.time.*;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -38,8 +43,13 @@ class ReservationServiceTest {
     private User user(long id) {
         User u = new User();
         u.setId(id);
-        u.setLogin("u"+id);
+        u.setLogin("u" + id);
         return u;
+    }
+
+    @BeforeEach
+    void initClock() {
+        ReflectionTestUtils.setField(service, "clock", Clock.systemDefaultZone());
     }
 
     @Test
@@ -49,8 +59,8 @@ class ReservationServiceTest {
 
         Reservation existing = new Reservation();
         existing.setStatus(Reservation.ReservationStatus.ACTIVE);
-        existing.setStartTime(LocalDateTime.of(2025,1,1,10,30));
-        existing.setEndTime(LocalDateTime.of(2025,1,1,11,30));
+        existing.setStartTime(LocalDateTime.of(2025, 1, 1, 10, 30));
+        existing.setEndTime(LocalDateTime.of(2025, 1, 1, 11, 30));
 
         when(repository.findByConferenceRoomIdAndStatusAndEndTimeAfterAndStartTimeBefore(
                 1L, Reservation.ReservationStatus.ACTIVE, start, end
@@ -62,8 +72,8 @@ class ReservationServiceTest {
 
     @Test
     void createReservation_rejectsOverCapacity() {
-        var start = LocalDateTime.now().plusHours(1).plusSeconds(0).plusNanos(0);
-        var end = start.plusHours(2);
+        LocalDateTime start = LocalDate.now().plusDays(1).atTime(10, 0);
+        LocalDateTime end = start.plusHours(2);
 
         Reservation r = new Reservation();
         r.setConferenceRoom(room(5));
@@ -73,7 +83,10 @@ class ReservationServiceTest {
         r.setExpectedAttendees(10); // > capacity
 
         when(repository.findByConferenceRoomIdAndStatusAndEndTimeAfterAndStartTimeBefore(
-                1L, Reservation.ReservationStatus.ACTIVE, start, end
+                anyLong(),
+                eq(Reservation.ReservationStatus.ACTIVE),
+                any(LocalDateTime.class),
+                any(LocalDateTime.class)
         )).thenReturn(List.of());
 
         boolean ok = service.createReservation(r);

@@ -34,7 +34,7 @@ public class SimpleDataGenerator implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        // Jeśli są rezerwacje - nie seeduj
+        // Jeśli są rezerwacje — nie seeduj
         if (reservationRepo.count() > 0) {
             System.out.println("[Seed] Reservations already exist - skipping");
             return;
@@ -49,7 +49,7 @@ public class SimpleDataGenerator implements CommandLineRunner {
                     room("A102", "Biurowiec A, 1 piętro", 6, "Projektor, Tablica"),
                     room("B201", "Biurowiec B, 2 piętro", 8, "TV, Kamera, Mikrofon"),
                     room("C301", "Biurowiec C, 3 piętro", 12, "Projektor 4K, Kamera, Mikrofon"),
-                    room("D401", "Biurowiec D, 4 piętro", 20, "Wideokonf., 2xTV, Mikrofony sufitowe")
+                    room("D401", "Biurowiec D, 4 piętro", 20, "Wideokonferencja, 2xTV, Mikrofony sufitowe")
             ));
         }
         List<ConferenceRoom> rooms = roomRepo.findAll();
@@ -123,19 +123,33 @@ public class SimpleDataGenerator implements CommandLineRunner {
                     r.setNotes(null);
                     r.setExpectedAttendees(expected);
 
-                    // createdAt: 1–30 dni przed startem
-                    r.setCreatedAt(start.minusDays(1 + rnd.nextInt(30)).withHour(rnd.nextInt(18)).withMinute(rnd.nextInt(60)));
-
-                    // check-in dla zakończonych: ~70% ma check-in w okolicy startu
-                    if (status == Reservation.ReservationStatus.COMPLETED) {
-                        if (rnd.nextDouble() < 0.7) {
-                            r.setCheckInTime(start.minusMinutes(5 + rnd.nextInt(10)));
-                        }
+                    // Rozkład lead time (wyprzedzenia) w godzinach
+                    // 10%: tego samego dnia (0–2h wcześniej)
+                    // 30%: 1–2 dni wcześniej (24–48h)
+                    // 40%: 3–7 dni wcześniej (72–168h)
+                    // 20%: 8–30 dni wcześniej (192–720h)
+                    double p = rnd.nextDouble();
+                    int hoursBack;
+                    if (p < 0.1) {
+                        hoursBack = rnd.nextInt(3); // 0..2h
+                    } else if (p < 0.4) {
+                        hoursBack = 24 + rnd.nextInt(25); // 24..48h
+                    } else if (p < 0.8) {
+                        hoursBack = 72 + rnd.nextInt(97); // 72..168h
+                    } else {
+                        hoursBack = 192 + rnd.nextInt(529); // 192..720h
                     }
+                    // createdAt = startTime - hoursBack
+                    r.setCreatedAt(r.getStartTime().minusHours(hoursBack));
 
-                    // anulacje: ustaw cancelledAt przed startem
                     if (status == Reservation.ReservationStatus.CANCELLED) {
-                        r.setCancelledAt(start.minusHours(1 + rnd.nextInt(48)));
+                        // anulacja zwykle przed startem: 1–48h wcześniej
+                        r.setCancelledAt(r.getStartTime().minusHours(1 + rnd.nextInt(48)));
+                    } else if (status == Reservation.ReservationStatus.COMPLETED) {
+                        // 70% completed ma check-in
+                        if (rnd.nextDouble() < 0.7) {
+                            r.setCheckInTime(r.getStartTime().minusMinutes(5 + rnd.nextInt(10)));
+                        }
                     }
 
                     // zapisz
@@ -186,6 +200,7 @@ public class SimpleDataGenerator implements CommandLineRunner {
         return false;
     }
 
-    private record TimeRange(LocalDateTime start, LocalDateTime end) {}
+    private record TimeRange(LocalDateTime start, LocalDateTime end) {
+    }
 
 }

@@ -22,8 +22,8 @@
         </div>
         <div class="col-12">
             <div class="hint"> Okno analizy: <b th:text="${#temporals.format(from, 'yyyy-MM-dd HH:mm')}"></b> — <b
-                    th:text="${#temporals.format(to, 'yyyy-MM-dd HH:mm')}"></b>, godziny pracy: <b
-                    th:text="${startHour}"></b>:00–<b th:text="${endHour}"></b>:00
+                    th:text="${#temporals.format(to, 'yyyy-MM-dd HH:mm')}"></b>, godziny pracy: <b th:text="${startHour}"></b>:00–<b
+                    th:text="${endHour}"></b>:00, weekendy wykluczone: <b th:text="${excludeWeekends} ? 'tak' : 'nie'"></b>
             </div>
         </div>
     </form>
@@ -116,8 +116,8 @@
                     <h5 class="mb-0">Szczyt równoległych rezerwacji</h5>
                     <span class="help-icon" data-bs-toggle="tooltip"
                           title="Maksymalna liczba jednocześnie zajętych sal (bez anulowanych) w wybranym oknie.">
-        ⓘ
-      </span>
+                    ⓘ
+                    </span>
                 </div>
                 <p class="mt-2 mb-1"
                    th:text="'Peak: ' + ${peakOccupancy.peak} + ' ok. ' + ${#temporals.format(peakOccupancy.at, 'yyyy-MM-dd HH:mm')}"></p>
@@ -127,6 +127,25 @@
                 </div>
             </div>
         </div>
+        <!-- Lead time to book -->
+        <div class="col-md-6">
+            <div class="card p-3 metric-card">
+                <div class="d-flex align-items-center"><h5 class="mb-0">Lead time to book</h5>
+                    <span class="help-icon"
+                          data-bs-toggle="tooltip"
+                          title="Średni czas od utworzenia rezerwacji (createdAt) do jej rozpoczęcia (startTime) w wybranym oknie (wg startTime).">
+                    ⓘ
+                    </span>
+                </div>
+                <p class="mt-2 mb-1"
+                   th:text="'Średni lead time: ' + ${#numbers.formatDecimal(leadTime.avgHours, 1, 1)} + ' h (N=' + ${leadTime.sampleSize} + ')'"></p>
+                <div class="hint"> Jak liczymy: średnia z (startTime − createdAt) dla rezerwacji, których start mieści
+                    się w [from,to]. Dlaczego ważne: pokazuje, z jakim wyprzedzeniem rezerwujemy sale (planowanie vs.
+                    rezerwacje „na ostatnią chwilę”).
+                </div>
+            </div>
+        </div>
+        <!-- Heatmapa obłożenia sal-->
         <div class="row g-3 mt-1">
             <div class="col-12">
                 <div class="card p-3 metric-card">

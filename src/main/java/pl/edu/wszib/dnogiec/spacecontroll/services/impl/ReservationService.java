@@ -6,6 +6,7 @@ import pl.edu.wszib.dnogiec.spacecontroll.dao.impl.spring.data.ReservationReposi
 import pl.edu.wszib.dnogiec.spacecontroll.model.Reservation;
 import pl.edu.wszib.dnogiec.spacecontroll.services.IReservationService;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -15,6 +16,7 @@ import java.util.Optional;
 public class ReservationService implements IReservationService {
 
     private final ReservationRepository reservationRepository;
+    private final Clock clock;
 
     @Override
     public boolean isRoomAvailable(Long roomId, LocalDateTime from, LocalDateTime to) {
@@ -22,22 +24,12 @@ public class ReservationService implements IReservationService {
                 .findByConferenceRoomIdAndStatusAndEndTimeAfterAndStartTimeBefore(
                         roomId, Reservation.ReservationStatus.ACTIVE, from, to);
         return overlaps.isEmpty();
-       /* // Pobierz wszystkie aktywne rezerwacje na daną salę
-        List<Reservation> existingReservation = reservationRepository
-                .findByConferenceRoomIdAndStatus(roomId, Reservation.ReservationStatus.ACTIVE);
-        // Sprawdź kolizje
-        for (Reservation r : existingReservation) {
-            if (r.getStartTime().isBefore(to) && r.getEndTime().isAfter(from)) {
-                return false; //kolizja
-            }
-        }
-        return true;*/
     }
 
     @Override
     public boolean canReserve(Long roomId, LocalDateTime from, LocalDateTime to) {
         if (from == null || to == null) return false;
-        if (from.isBefore(LocalDateTime.now())) return false;
+        if (from.isBefore(LocalDateTime.now(clock))) return false;
         if (from.isAfter(to) || from.isEqual(to)) return false;
         if (!from.toLocalDate().equals(to.toLocalDate())) return false; //Rezerwacja tylko w tym samym dniu
         return isRoomAvailable(roomId, from, to);
