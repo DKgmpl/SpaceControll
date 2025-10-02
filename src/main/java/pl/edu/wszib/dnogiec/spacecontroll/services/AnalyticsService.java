@@ -91,7 +91,7 @@ public class AnalyticsService {
         return new UtilizationResult(usedBusiness, available, util);
     }
 
-    // ======================== Heatmap (day x hour) ========================
+    // ======================== Heatmap (dzień x godzina) ========================
 
     public HeatmapData utilizationHeatmap(LocalDateTime from, LocalDateTime to, int startHour, int endHour) {
         return utilizationHeatmapInternal(from, to, startHour, endHour, false);

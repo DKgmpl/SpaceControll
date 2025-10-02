@@ -12,15 +12,8 @@ public interface IReservationService {
 
     boolean cancelReservation(Long reservationId, Long userId);
 
-    /**
-     * Zwraca wszystkie rezerwacje dla podanej sali.
-     */
     List<Reservation> getReservationsForRoom(Long roomId);
 
-    /**
-     * Tworzy nową rezerwację, po sprawdzeniu dostępności i poprawności czasu.
-     * Zwraca true jeśli sukces.
-     */
     boolean createReservation(Reservation reservation);
 
     boolean checkIn(Long reservationId, Long userId);

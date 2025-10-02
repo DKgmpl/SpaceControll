@@ -85,7 +85,7 @@ public class SecurityConfiguration {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        // Use BCrypt encoder exclusively for all passwords
+        // Użyty został BCrypt dla wszystkich haseł
         return new BCryptPasswordEncoder();
     }
 

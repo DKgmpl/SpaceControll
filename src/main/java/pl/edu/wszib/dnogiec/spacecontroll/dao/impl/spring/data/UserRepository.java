@@ -8,7 +8,6 @@ import java.util.Optional;
 
 /**
  * Repozytorium do operacji na encji User.
- * Implementuje podstawowe operacje CRUD oraz metodę wyszukującą użytkownika po loginie.
  */
 
 @Repository

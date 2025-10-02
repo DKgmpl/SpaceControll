@@ -7,6 +7,10 @@ import pl.edu.wszib.dnogiec.spacecontroll.model.Reservation;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Repozytorium do operacji na encji ReservationRepository.
+ */
+
 @Repository
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
     List<Reservation> findByConferenceRoomId(Long roomId);
