@@ -45,6 +45,9 @@ class IcsControllerStandaloneTest {
     MockMvc mvc;
     ReservationController controller;
 
+    private static User makeUser(Long id, String login, User.Role role) { var u=new User(); u.setId(id); u.setLogin(login); u.setRole(role); u.setEmail(login+"@example.com"); return u; }
+    private static ConferenceRoom makeRoom(String n,String loc,int cap){ var r=new ConferenceRoom(); r.setName(n); r.setLocation(loc); r.setCapacity(cap); return r; }
+
     @BeforeEach
     void setUp() throws Exception {
         controller = new ReservationController(reservationService, conferenceRoomService, userRepository, icsService);
@@ -154,5 +157,33 @@ class IcsControllerStandaloneTest {
                 .andExpect(content().string(containsString("SUMMARY:Rezerwacja sali B201")))
                 .andExpect(content().string(containsString("DTSTART")))
                 .andExpect(content().string(containsString("DTEND")));
+    }
+
+    // ICS – negatywny przypadek uprawnień (nie właściciel i nie admin → 403)
+    @Test
+    void reservationIcs_forbiddenForNonOwnerAndNonAdmin() throws Exception {
+        // login „user” (nie admin)
+        setAuthUser("user");
+        when(userRepository.findByLogin(eq("user")))
+                .thenReturn(Optional.of(makeUser(2L, "user", User.Role.USER)));
+
+        // rezerwacja należy do innego użytkownika
+        var r = new Reservation();
+        r.setId(777L);
+        r.setUser(makeUser(1L, "other", User.Role.USER));
+        r.setConferenceRoom(makeRoom("A101","Budynek A",6));
+        r.setStartTime(LocalDateTime.now().plusDays(1).withHour(10).withMinute(0));
+        r.setEndTime(r.getStartTime().plusHours(1));
+        r.setStatus(Reservation.ReservationStatus.ACTIVE);
+
+        when(reservationService.getReservationById(777L)).thenReturn(r);
+
+        mvc.perform(get("/reservations/777/ics"))
+                .andExpect(status().isForbidden());
+    }
+
+    private static void setAuthUser(String username) {
+        var auth = new UsernamePasswordAuthenticationToken(username, "N/A");
+        SecurityContextHolder.getContext().setAuthentication(auth);
     }
 }

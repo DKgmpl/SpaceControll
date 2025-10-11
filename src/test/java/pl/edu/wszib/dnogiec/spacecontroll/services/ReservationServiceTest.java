@@ -31,6 +31,17 @@ class ReservationServiceTest {
     @InjectMocks
     ReservationService service;
 
+    private static User userWithId(long id) {
+        User u = new User();
+        u.setId(id);
+        u.setLogin("u" + id);
+        return u;
+    }
+
+    private static LocalDateTime nowRounded() {
+        return LocalDateTime.now().withSecond(0).withNano(0);
+    }
+
     private ConferenceRoom room(int cap) {
         ConferenceRoom r = new ConferenceRoom();
         r.setId(1L);
@@ -130,5 +141,89 @@ class ReservationServiceTest {
         boolean ok = service.checkIn(200L, 1L);
         assertThat(ok).isTrue();
         assertThat(r.getCheckInTime()).isNotNull();
+    }
+
+    // Brak kolizji, gdy przedziały „stykają się” krawędziami (edge case: end == start)
+    @Test
+    void isRoomAvailable_edgeTouch_isNotOverlap() {
+        LocalDateTime start = LocalDate.now().plusDays(1).atTime(10, 0);
+        LocalDateTime end   = start.plusHours(1);
+
+        // Brak kolizji – repozytorium zwraca pustą listę
+        when(repository.findByConferenceRoomIdAndStatusAndEndTimeAfterAndStartTimeBefore(
+                anyLong(),
+                eq(Reservation.ReservationStatus.ACTIVE),
+                any(LocalDateTime.class),
+                any(LocalDateTime.class)
+        )).thenReturn(List.of());
+
+        boolean available = service.isRoomAvailable(1L, start, end);
+        assertThat(available).isTrue();
+    }
+
+    // Check‑in poza oknem ±15 min – nie powinno zadziałać
+    @Test
+    void checkIn_outsideWindow_fails() {
+        LocalDateTime now = nowRounded();
+        LocalDateTime start = now.plusHours(2); // daleko w przyszłości → poza oknem ±15 min
+
+        Reservation r = new Reservation();
+        r.setId(100L);
+        r.setUser(userWithId(1L)); // WAŻNE: spójne id z wywołaniem service.checkIn(..., 1L)
+        r.setStatus(Reservation.ReservationStatus.ACTIVE);
+        r.setStartTime(start);
+
+        when(repository.findById(100L)).thenReturn(Optional.of(r));
+
+        boolean ok = service.checkIn(100L, 1L);
+        assertThat(ok).isFalse();
+        assertThat(r.getCheckInTime()).isNull();
+    }
+
+    // Check‑in – idempotencja (drugie wywołanie nic nie psuje)
+    @Test
+    void checkIn_isIdempotent() {
+        LocalDateTime now = nowRounded();
+        LocalDateTime start = now.plusMinutes(1); // tuż przed startem → w oknie ±15 min
+
+        Reservation r = new Reservation();
+        r.setId(101L);
+        r.setUser(userWithId(1L));
+        r.setStatus(Reservation.ReservationStatus.ACTIVE);
+        r.setStartTime(start);
+
+        when(repository.findById(101L)).thenReturn(Optional.of(r));
+
+        boolean first  = service.checkIn(101L, 1L);
+        boolean second = service.checkIn(101L, 1L);
+
+        assertThat(first).isTrue();
+        assertThat(second).isTrue();            // idempotentne
+        assertThat(r.getCheckInTime()).isNotNull();
+    }
+
+    // Anulowanie – tylko właściciel może anulować swoją rezerwację w przyszłości
+    @Test
+    void cancel_notOwnerOrPastStart_fails() {
+        LocalDateTime now = nowRounded();
+
+        Reservation r = new Reservation();
+        r.setId(200L);
+        r.setUser(userWithId(1L)); // właściciel = 1L
+        r.setStatus(Reservation.ReservationStatus.ACTIVE);
+        r.setStartTime(now.plusHours(3));       // w przyszłości
+
+        when(repository.findById(200L)).thenReturn(Optional.of(r));
+
+        // Nie właściciel
+        boolean notOwner = service.cancelReservation(200L, 999L);
+        assertThat(notOwner).isFalse();
+        assertThat(r.getStatus()).isEqualTo(Reservation.ReservationStatus.ACTIVE);
+
+        // Właściciel (id=1L)
+        boolean owner = service.cancelReservation(200L, 1L);
+        assertThat(owner).isTrue();
+        assertThat(r.getStatus()).isEqualTo(Reservation.ReservationStatus.CANCELLED);
+        assertThat(r.getCancelledAt()).isNotNull();
     }
 }
