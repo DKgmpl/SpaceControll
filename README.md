@@ -42,6 +42,7 @@ Space Controll is a comprehensive office space management system that enables ef
 2. Access the application at `http://localhost:8080`
 
 ## Project Structure
+```bash
 SpaceControll/
 ├── .idea/                          # IntelliJ IDEA configuration
 ├── src/
@@ -73,6 +74,7 @@ SpaceControll/
 ├── .gitignore
 ├── pom.xml                         # Maven configuration
 └── README.md                       # Project documentation
+```
 
 ## Contributing
 Contributions are welcome! Please submit a pull request to contribute to this project.
