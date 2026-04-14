@@ -80,4 +80,4 @@ SpaceControll/
 Contributions are welcome! Please submit a pull request to contribute to this project.
 
 ## License
-This project is licensed under the MIT License. See the LICENSE file for details.
+This project is licensed under the MIT License.
